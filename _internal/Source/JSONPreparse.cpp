@@ -32,7 +32,7 @@ looplabel:
 	}
 	#define GET_COMMENT(x, y, name) json_string name = extractComment(x, y)
 	#define RETURN_NODE(node, name){\
-		JSONNode res = node;\
+		JSONWGNode res = node;\
 		res.set_comment(name);\
 		return res;\
 	}
@@ -95,7 +95,7 @@ json_number FetchNumber(const json_string & _string) json_nothrow {
     #endif
 }
 
-JSONNode JSONPreparse::isValidNumber(json_string::const_iterator & ptr, json_string::const_iterator & end){
+JSONWGNode JSONPreparse::isValidNumber(json_string::const_iterator & ptr, json_string::const_iterator & end){
     //ptr points at the first character in the number
     //ptr will end up past the last character
     json_string::const_iterator start = ptr;
@@ -155,7 +155,7 @@ JSONNode JSONPreparse::isValidNumber(json_string::const_iterator & ptr, json_str
 			 #ifndef JSON_STRICT
 			 case JSON_TEXT('x'):
 				while(isHex(*++ptr)){};
-				return JSONNode(json_global(EMPTY_JSON_STRING), FetchNumber(json_string(start, end - 1)));
+				return JSONWGNode(json_global(EMPTY_JSON_STRING), FetchNumber(json_string(start, end - 1)));
 			 #ifdef JSON_OCTAL
 			 #ifdef __GNUC__
 				case JSON_TEXT('0') ... JSON_TEXT('7'):  //octal
@@ -171,7 +171,7 @@ JSONNode JSONPreparse::isValidNumber(json_string::const_iterator & ptr, json_str
 			 #endif
 				while((*++ptr >= JSON_TEXT('0')) && (*ptr <= JSON_TEXT('7'))){};
 				if ((*ptr != JSON_TEXT('8')) && (*ptr != JSON_TEXT('9'))){
-				    return JSONNode(json_global(EMPTY_JSON_STRING), FetchNumber(json_string(start, ptr - 1)));
+				    return JSONWGNode(json_global(EMPTY_JSON_STRING), FetchNumber(json_string(start, ptr - 1)));
 				} 
 				throw false;
 			 case JSON_TEXT('8'):
@@ -212,7 +212,7 @@ JSONNode JSONPreparse::isValidNumber(json_string::const_iterator & ptr, json_str
 				break;
 			 #endif
 			 default:  //just a 0
-				return JSONNode(json_global(EMPTY_JSON_STRING), FetchNumber(json_string(start, ptr - 1)));;
+				return JSONWGNode(json_global(EMPTY_JSON_STRING), FetchNumber(json_string(start, ptr - 1)));;
 		  }
 		  break;
 	   default:
@@ -271,7 +271,7 @@ JSONNode JSONPreparse::isValidNumber(json_string::const_iterator & ptr, json_str
 		  #endif
 			 break;
 		  default:
-			 return JSONNode(json_global(EMPTY_JSON_STRING), FetchNumber(json_string(start, ptr)));;
+			 return JSONWGNode(json_global(EMPTY_JSON_STRING), FetchNumber(json_string(start, ptr)));;
 	   }
 	   ++ptr;
     }
@@ -290,14 +290,14 @@ JSONNode JSONPreparse::isValidNumber(json_string::const_iterator & ptr, json_str
     #define LETTERCHECK(x, y)\
 	   if (json_unlikely(*++ptr != JSON_TEXT(x))) throw false
 #endif
-JSONNode JSONPreparse::isValidMember(json_string::const_iterator & ptr, json_string::const_iterator & end){
+JSONWGNode JSONPreparse::isValidMember(json_string::const_iterator & ptr, json_string::const_iterator & end){
     //ptr is on the first character of the member
     //ptr will end up immediately after the last character in the member
     if (ptr == end) throw false;
     
     switch(*ptr){
 	   case JSON_TEXT('\"'):{
-           return JSONNode::stringType(isValidString(++ptr, end));
+           return JSONWGNode::stringType(isValidString(++ptr, end));
 	   }
 	   case JSON_TEXT('{'):
 		  return isValidObject(++ptr, end);
@@ -308,25 +308,25 @@ JSONNode JSONPreparse::isValidMember(json_string::const_iterator & ptr, json_str
 	   LETTERCHECK('u', 'U');
 	   LETTERCHECK('e', 'E');
 		  ++ptr;
-		  return JSONNode(json_global(EMPTY_JSON_STRING), true);
+		  return JSONWGNode(json_global(EMPTY_JSON_STRING), true);
 	   LETTERCASE('f', 'F'):
 	   LETTERCHECK('a', 'A');
 	   LETTERCHECK('l', 'L');
 	   LETTERCHECK('s', 'S');
 	   LETTERCHECK('e', 'E');
 		  ++ptr;
-		  return JSONNode(json_global(EMPTY_JSON_STRING), false);
+		  return JSONWGNode(json_global(EMPTY_JSON_STRING), false);
 	   LETTERCASE('n', 'N'):
 	   LETTERCHECK('u', 'U');
 	   LETTERCHECK('l', 'L');
 	   LETTERCHECK('l', 'L');
 		  ++ptr;
-		  return JSONNode(JSON_NULL);
+		  return JSONWGNode(JSON_NULL);
 	   #ifndef JSON_STRICT
 		  case JSON_TEXT('}'):  //null in libjson
 		  case JSON_TEXT(']'):  //null in libjson
 		  case JSON_TEXT(','):  //null in libjson
-			 return JSONNode(JSON_NULL);
+			 return JSONWGNode(JSON_NULL);
 	   #endif
     }
     //a number
@@ -390,12 +390,12 @@ json_string JSONPreparse::isValidString(json_string::const_iterator & ptr, json_
     throw false;
 }
 
-void JSONPreparse::isValidNamedObject(json_string::const_iterator & ptr, json_string::const_iterator & end, JSONNode & parent COMMENT_PARAM(comment)) {
+void JSONPreparse::isValidNamedObject(json_string::const_iterator & ptr, json_string::const_iterator & end, JSONWGNode & parent COMMENT_PARAM(comment)) {
 	//ptr should be right before the string name
     {
 	   json_string _name = isValidString(++ptr, end);
 	   if (json_unlikely(*ptr++ != JSON_TEXT(':'))) throw false;
-	   JSONNode res = isValidMember(ptr, end);
+	   JSONWGNode res = isValidMember(ptr, end);
 	   res.set_name_(_name);
 		SET_COMMENT(res, comment);
 		#ifdef JSON_LIBRARY
@@ -421,10 +421,10 @@ void JSONPreparse::isValidNamedObject(json_string::const_iterator & ptr, json_st
     }
 }
 
-JSONNode JSONPreparse::isValidObject(json_string::const_iterator & ptr, json_string::const_iterator & end) {
+JSONWGNode JSONPreparse::isValidObject(json_string::const_iterator & ptr, json_string::const_iterator & end) {
     //ptr should currently be pointing past the {, so this must be the start of a name, or the closing }
     //ptr will end up past the last }
-    JSONNode res(JSON_NODE);
+    JSONWGNode res(JSON_NODE);
 	GET_COMMENT(ptr, end, comment);
 	switch(*ptr){
 	  case JSON_TEXT('\"'):
@@ -438,10 +438,10 @@ JSONNode JSONPreparse::isValidObject(json_string::const_iterator & ptr, json_str
 	}
 }
 
-void pushArrayMember(JSONNode & res, json_string::const_iterator & ptr, json_string::const_iterator & end);
-void pushArrayMember(JSONNode & res, json_string::const_iterator & ptr, json_string::const_iterator & end){
+void pushArrayMember(JSONWGNode & res, json_string::const_iterator & ptr, json_string::const_iterator & end);
+void pushArrayMember(JSONWGNode & res, json_string::const_iterator & ptr, json_string::const_iterator & end){
 	GET_COMMENT(ptr, end, comment);
-	JSONNode temp = JSONPreparse::isValidMember(ptr, end);
+	JSONWGNode temp = JSONPreparse::isValidMember(ptr, end);
 	SET_COMMENT(temp, comment);
 	#ifdef JSON_LIBRARY
 		res.push_back(&temp);
@@ -450,10 +450,10 @@ void pushArrayMember(JSONNode & res, json_string::const_iterator & ptr, json_str
 	#endif
 }
 
-JSONNode JSONPreparse::isValidArray(json_string::const_iterator & ptr, json_string::const_iterator & end) {
+JSONWGNode JSONPreparse::isValidArray(json_string::const_iterator & ptr, json_string::const_iterator & end) {
     //ptr should currently be pointing past the [, so this must be the start of a member, or the closing ]
     //ptr will end up past the last ]
-    JSONNode res(JSON_ARRAY);
+    JSONWGNode res(JSON_ARRAY);
     do{
 	   switch(*ptr){
 		  case JSON_TEXT(']'):
@@ -476,7 +476,7 @@ JSONNode JSONPreparse::isValidArray(json_string::const_iterator & ptr, json_stri
     throw false;
 }
 
-JSONNode JSONPreparse::isValidRoot(const json_string & json) json_throws(std::invalid_argument) {
+JSONWGNode JSONPreparse::isValidRoot(const json_string & json) json_throws(std::invalid_argument) {
     json_string::const_iterator it = json.begin();
     json_string::const_iterator end = json.end();
     try {
@@ -492,7 +492,7 @@ JSONNode JSONPreparse::isValidRoot(const json_string & json) json_throws(std::in
     #ifndef JSON_NO_EXCEPTIONS
 	   throw std::invalid_argument(json_global(EMPTY_STD_STRING));
     #else
-	   return JSONNode(JSON_NULL);
+	   return JSONWGNode(JSON_NULL);
     #endif
 }
 

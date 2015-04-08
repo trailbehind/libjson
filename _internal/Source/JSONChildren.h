@@ -13,20 +13,20 @@
 #endif
 
 #define json_foreach(chldrn, itrtr)\
-    JSONNode ** itrtr = chldrn -> begin();\
-    for(JSONNode ** itrtr##_end = chldrn -> end(); itrtr != itrtr##_end; ++itrtr)
+    JSONWGNode ** itrtr = chldrn -> begin();\
+    for(JSONWGNode ** itrtr##_end = chldrn -> end(); itrtr != itrtr##_end; ++itrtr)
 
 /*
  This class is essentially a vector that has been heavily optimized for the specific purpose
- of holding JSONNode children.  It acts the same way as a vector, it has a automatically
+ of holding JSONWGNode children.  It acts the same way as a vector, it has a automatically
  expanding array.  On destruction, this container automatically destroys everything contained
  in it as well, so that you libjson doesn't have to do that.
 
- T is JSONNode*, I can't define it that way directly because JSONNode uses this container, and because
+ T is JSONWGNode*, I can't define it that way directly because JSONWGNode uses this container, and because
  the container deletes the children automatically, forward declaration can't be used
  */
 
-class JSONNode;  //forward declaration
+class JSONWGNode;  //forward declaration
 
 #ifdef JSON_LESS_MEMORY
     #define childrenVirtual virtual
@@ -43,7 +43,7 @@ public:
     }
 
     #ifdef JSON_LESS_MEMORY
-	   jsonChildren(JSONNode** ar, json_index_t si, json_index_t ca) json_nothrow : array(ar), mysize(si), mycapacity(ca) {
+	   jsonChildren(JSONWGNode** ar, json_index_t si, json_index_t ca) json_nothrow : array(ar), mysize(si), mycapacity(ca) {
 		  LIBJSON_CTOR;
 	   }
     #endif
@@ -52,7 +52,7 @@ public:
     childrenVirtual ~jsonChildren(void) json_nothrow {
 	   if (json_unlikely(array != 0)){  //the following function calls are safe, but take more time than a check here
 		  deleteAll();
-		  libjson_free<JSONNode*>(array);
+		  libjson_free<JSONWGNode*>(array);
 	   }
 	   LIBJSON_DTOR;
     }
@@ -62,22 +62,22 @@ public:
     void inc(void) json_nothrow;
 
     //Adds something to the vector, doubling the array if necessary
-    void push_back(JSONNode * item) json_nothrow {
+    void push_back(JSONWGNode * item) json_nothrow {
 	   JSON_ASSERT(this != 0, JSON_TEXT("Children is null push_back"));
 	   inc();
 	   array[mysize++] = item;
     }
 
     //Adds something to the front of the vector, doubling the array if necessary
-    void push_front(JSONNode * item) json_nothrow {
+    void push_front(JSONWGNode * item) json_nothrow {
 	   JSON_ASSERT(this != 0, JSON_TEXT("Children is null push_front"));
 	   inc();
-	   std::memmove(array + 1, array, mysize++ * sizeof(JSONNode *));
+	   std::memmove(array + 1, array, mysize++ * sizeof(JSONWGNode *));
 	   array[0] = item;
     }
 
     //gets an item out of the vector by it's position
-    inline JSONNode * operator[] (json_index_t position) const json_nothrow {
+    inline JSONWGNode * operator[] (json_index_t position) const json_nothrow {
 	   JSON_ASSERT(this != 0, JSON_TEXT("Children is null []"));
 	   JSON_ASSERT(position < mysize, JSON_TEXT("Using [] out of bounds"));
 	   JSON_ASSERT(position < mycapacity, JSON_TEXT("Using [] out of bounds"));
@@ -115,13 +115,13 @@ public:
     }
 
     //returns the beginning of the array
-    inline JSONNode ** begin(void) const json_nothrow {
+    inline JSONWGNode ** begin(void) const json_nothrow {
 	   JSON_ASSERT(this != 0, JSON_TEXT("Children is null begin"));
 	   return array;
     }
 
     //returns the end of the array
-    inline JSONNode ** end(void) const json_nothrow {
+    inline JSONWGNode ** end(void) const json_nothrow {
 	   JSON_ASSERT(this != 0, JSON_TEXT("Children is null end"));
 	   return array + mysize;
     }
@@ -131,7 +131,7 @@ public:
     struct iteratorKeeper {
     public:
 		LIBJSON_OBJECT(jsonChildren::iteratorKeeper);
-	  iteratorKeeper(jsonChildren * pthis, JSONNode ** & position) json_nothrow :
+	  iteratorKeeper(jsonChildren * pthis, JSONWGNode ** & position) json_nothrow :
 		 myRelativeOffset(reverse ? (json_index_t)(pthis -> array + (size_t)pthis -> mysize - position) : (json_index_t)(position - pthis -> array)),
 		 myChildren(pthis),
 		 myPos(position){
@@ -152,22 +152,22 @@ public:
 
 	   json_index_t myRelativeOffset;
 	   jsonChildren * myChildren;
-	   JSONNode ** & myPos;
+	   JSONWGNode ** & myPos;
     };
 
     //This function DOES NOT delete the item it points to
-    inline void erase(JSONNode ** & position) json_nothrow {
+    inline void erase(JSONWGNode ** & position) json_nothrow {
 	   JSON_ASSERT(this != 0, JSON_TEXT("Children is null erase"));
 	   JSON_ASSERT(array != 0, JSON_TEXT("erasing something from a null array 1"));
 	   JSON_ASSERT(position >= array, JSON_TEXT("position is beneath the start of the array 1"));
 	   JSON_ASSERT(position <= array + mysize, JSON_TEXT("erasing out of bounds 1"));
-	   std::memmove(position, position + 1, (mysize-- - (position - array) - 1) * sizeof(JSONNode *));
+	   std::memmove(position, position + 1, (mysize-- - (position - array) - 1) * sizeof(JSONWGNode *));
 	   iteratorKeeper<false> ik(this, position);
 	   shrink();
     }
 
     //This function DOES NOT delete the item it points to
-    inline void erase(JSONNode ** & position, json_index_t number) json_nothrow {
+    inline void erase(JSONWGNode ** & position, json_index_t number) json_nothrow {
 	   JSON_ASSERT(this != 0, JSON_TEXT("Children is null erase 2"));
 	   doerase(position, number);
 	   iteratorKeeper<false> ik(this, position);
@@ -176,7 +176,7 @@ public:
 
 
     //This function DOES NOT delete the item it points to
-    inline void erase(JSONNode ** position, json_index_t number, JSONNode ** & starter) json_nothrow {
+    inline void erase(JSONWGNode ** position, json_index_t number, JSONWGNode ** & starter) json_nothrow {
 	   JSON_ASSERT(this != 0, JSON_TEXT("Children is null erase 3"));
 	   doerase(position, number);
 	   iteratorKeeper<false> ik(this, starter);
@@ -184,9 +184,9 @@ public:
     }
 
     #ifdef JSON_LIBRARY
-	   void insert(JSONNode ** & position, JSONNode * item) json_nothrow{
+	   void insert(JSONWGNode ** & position, JSONWGNode * item) json_nothrow{
     #else
-	   void insert(JSONNode ** & position, JSONNode * item, bool reverse = false) json_nothrow {
+	   void insert(JSONWGNode ** & position, JSONWGNode * item, bool reverse = false) json_nothrow {
     #endif
 	   JSON_ASSERT(this != 0, JSON_TEXT("Children is null insert"));
 	   //position isnt relative to array because of realloc
@@ -203,11 +203,11 @@ public:
 			inc();
 		}
 
-	   std::memmove(position + 1, position, (mysize++ - (position - array)) * sizeof(JSONNode *));
+	   std::memmove(position + 1, position, (mysize++ - (position - array)) * sizeof(JSONWGNode *));
 	   *position = item;
     }
 
-    void insert(JSONNode ** & position, JSONNode ** items, json_index_t num) json_nothrow {
+    void insert(JSONWGNode ** & position, JSONWGNode ** items, json_index_t num) json_nothrow {
 	   JSON_ASSERT(this != 0, JSON_TEXT("Children is null insert 2"));
 	   JSON_ASSERT(position >= array, JSON_TEXT("position is beneath the start of the array insert 2"));
 	   JSON_ASSERT(position <= array + mysize, JSON_TEXT("position is above the end of the array insert 2"));
@@ -215,9 +215,9 @@ public:
 		  iteratorKeeper<false> ik(this, position);
 		  inc(num);
 	   }
-	   const size_t ptrs = ((JSONNode **)(array + mysize)) - position;
-	   std::memmove(position + num, position, ptrs * sizeof(JSONNode *));
-	   std::memcpy(position, items, num * sizeof(JSONNode *));
+	   const size_t ptrs = ((JSONWGNode **)(array + mysize)) - position;
+	   std::memmove(position + num, position, ptrs * sizeof(JSONWGNode *));
+	   std::memcpy(position, items, num * sizeof(JSONWGNode *));
 	   mysize += num;
     }
 
@@ -226,7 +226,7 @@ public:
 	   JSON_ASSERT(array == 0, JSON_TEXT("reserve is not meant to expand a preexisting array"));
 	   JSON_ASSERT(mycapacity == 0, JSON_TEXT("reservec is not meant to expand a preexisting array"));
 	   JSON_ASSERT(mysize == 0, JSON_TEXT("reserves is not meant to expand a preexisting array"));
-	   array = json_malloc<JSONNode*>(mycapacity = amount);
+	   array = json_malloc<JSONWGNode*>(mycapacity = amount);
     }
 
 	//it is static because mine might change pointers entirely
@@ -236,12 +236,12 @@ public:
     inline childrenVirtual void shrink() json_nothrow {
 	   JSON_ASSERT(this != 0, JSON_TEXT("Children is null shrink"));
 	   if (json_unlikely(mysize == 0)){  //size is zero, we should completely free the array
-		  libjson_free<JSONNode*>(array);  //free does checks for a null pointer, so don't bother checking
+		  libjson_free<JSONWGNode*>(array);  //free does checks for a null pointer, so don't bother checking
 		  array = 0;
 	   #ifdef JSON_LESS_MEMORY
 		  } else {  //need to shrink it, using realloc
 			 JSON_ASSERT(array != 0, JSON_TEXT("shrinking a null array that is not size 0"));
-			 array = json_realloc<JSONNode*>(array, mysize);
+			 array = json_realloc<JSONWGNode*>(array, mysize);
 	   #endif
 	   }
 	   mycapacity = mysize;
@@ -265,7 +265,7 @@ public:
 	   #endif
     }
 
-    JSONNode ** array;  //the expandable array
+    JSONWGNode ** array;  //the expandable array
 
     json_index_t mysize;	     //the number of valid items
     json_index_t mycapacity;   //the number of possible items
@@ -274,8 +274,8 @@ JSON_PROTECTED
     jsonChildren(const jsonChildren &);
     jsonChildren & operator = (const jsonChildren &);
 
-    void deleteAll(void) json_nothrow json_hot;  //implemented in JSONNode.cpp
-    void doerase(JSONNode ** position, json_index_t number) json_nothrow;
+    void deleteAll(void) json_nothrow json_hot;  //implemented in JSONWGNode.cpp
+    void doerase(JSONWGNode ** position, json_index_t number) json_nothrow;
 };
 
 #ifdef JSON_LESS_MEMORY
@@ -296,11 +296,11 @@ JSON_PROTECTED
 	   inline virtual void shrink() json_nothrow {
 		  JSON_ASSERT(this != 0, JSON_TEXT("Children is null shrink reserved"));
 		  if (json_unlikely(mysize == 0)){  //size is zero, we should completely free the array
-			 libjson_free<JSONNode*>(array);  //free does checks for a null pointer, so don't bother checking
+			 libjson_free<JSONWGNode*>(array);  //free does checks for a null pointer, so don't bother checking
 			 array = 0;
 		  } else if (mysize > myreserved){
 			 JSON_ASSERT(array != 0, JSON_TEXT("shrinking a null array that is not size 0"));
-			 array = json_realloc<JSONNode*>(array, mysize);
+			 array = json_realloc<JSONWGNode*>(array, mysize);
 		  }
 	   }
 

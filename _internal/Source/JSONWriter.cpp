@@ -1,9 +1,9 @@
 #include "JSONNode.h"
 #ifdef JSON_WRITE_PRIORITY
-#include "JSONWorker.h"
+#include "JSONWGWorker.h"
 #include "JSONGlobals.h"
 
-extern bool used_ascii_one;
+extern bool wgused_ascii_one;
 
 #ifdef JSON_INDENT
     inline json_string makeIndent(unsigned int amount) json_nothrow json_write_priority;
@@ -67,15 +67,15 @@ extern bool used_ascii_one;
     }
 #endif
 
-void internalJSONNode::WriteName(bool formatted, bool arrayChild, json_string & output) const json_nothrow {
+void internalWGJSONWGNode::WriteName(bool formatted, bool arrayChild, json_string & output) const json_nothrow {
     if (!arrayChild){
 		output += JSON_TEXT("\"");
-		JSONWorker::UnfixString(_name, _name_encoded, output);
+		JSONWGWorker::UnfixString(_name, _name_encoded, output);
 		output += ((formatted) ? JSON_TEXT("\" : ") : JSON_TEXT("\":"));
     }
 }
 
-void internalJSONNode::WriteChildren(unsigned int indent, json_string & output) const json_nothrow {
+void internalWGJSONWGNode::WriteChildren(unsigned int indent, json_string & output) const json_nothrow {
     //Iterate through the children and write them
     if (json_likely(CHILDREN -> empty())) return;
 
@@ -88,8 +88,8 @@ void internalJSONNode::WriteChildren(unsigned int indent, json_string & output) 
     //else it's not formatted, leave the indentation strings empty
     const size_t size_minus_one = CHILDREN -> size() - 1;
     size_t i = 0;
-    JSONNode ** it = CHILDREN -> begin();
-    for(JSONNode ** it_end = CHILDREN -> end(); it != it_end; ++it, ++i){
+    JSONWGNode ** it = CHILDREN -> begin();
+    for(JSONWGNode ** it_end = CHILDREN -> end(); it != it_end; ++it, ++i){
 
 		output += indent_plus_one;
 		(*it) -> internal -> Write(indent, type() == JSON_ARRAY, output);
@@ -102,7 +102,7 @@ void internalJSONNode::WriteChildren(unsigned int indent, json_string & output) 
 }
 
 #ifdef JSON_ARRAY_SIZE_ON_ONE_LINE
-    void internalJSONNode::WriteChildrenOneLine(unsigned int indent, json_string & output) const json_nothrow {
+    void internalWGJSONWGNode::WriteChildrenOneLine(unsigned int indent, json_string & output) const json_nothrow {
 	   //Iterate through the children and write them
 	   if (json_likely(CHILDREN -> empty())) return;
 	   if ((*CHILDREN -> begin()) -> internal -> isContainer()) return WriteChildren(indent, output);
@@ -115,8 +115,8 @@ void internalJSONNode::WriteChildren(unsigned int indent, json_string & output) 
 	   //else it's not formatted, leave the indentation strings empty
 	   const size_t size_minus_one = CHILDREN -> size() - 1;
 	   size_t i = 0;
-	   JSONNode ** it = CHILDREN -> begin();
-	   for(JSONNode ** it_end = CHILDREN -> end(); it != it_end; ++it, ++i){
+	   JSONWGNode ** it = CHILDREN -> begin();
+	   for(JSONWGNode ** it_end = CHILDREN -> end(); it != it_end; ++it, ++i){
 		  (*it) -> internal -> Write(indent, type() == JSON_ARRAY, output);
 		  if (json_likely(i < size_minus_one)) output += comma;  //the last one does not get a comma, but all of the others do
 	   }
@@ -124,7 +124,7 @@ void internalJSONNode::WriteChildren(unsigned int indent, json_string & output) 
 #endif
 
 #ifdef JSON_COMMENTS
-    void internalJSONNode::WriteComment(unsigned int indent, json_string & output) const json_nothrow {
+    void internalWGJSONWGNode::WriteComment(unsigned int indent, json_string & output) const json_nothrow {
 	   if (indent == 0xFFFFFFFF) return;
 	   if (json_likely(_comment.empty())) return;
 	   size_t pos = _comment.find(JSON_TEXT('\n'));
@@ -175,12 +175,12 @@ void internalJSONNode::WriteChildren(unsigned int indent, json_string & output) 
 	   #endif
     }
 #else
-    inline void internalJSONNode::WriteComment(unsigned int, json_string &) const json_nothrow {}
+    inline void internalWGJSONWGNode::WriteComment(unsigned int, json_string &) const json_nothrow {}
 #endif
 
-void internalJSONNode::DumpRawString(json_string & output) const json_nothrow {
+void internalWGJSONWGNode::DumpRawString(json_string & output) const json_nothrow {
 	//first remove the \1 characters
-	if (used_ascii_one){  //if it hasn't been used yet, don't bother checking
+	if (wgused_ascii_one){  //if it hasn't been used yet, don't bother checking
 		json_string result(_string.begin(), _string.end());
 		for(json_string::iterator beg = result.begin(), en = result.end(); beg != en; ++beg){
 			if (*beg == JSON_TEXT('\1')) *beg = JSON_TEXT('\"');
@@ -192,7 +192,7 @@ void internalJSONNode::DumpRawString(json_string & output) const json_nothrow {
 	}
 }
 
-void internalJSONNode::Write(unsigned int indent, bool arrayChild, json_string & output) const json_nothrow {
+void internalWGJSONWGNode::Write(unsigned int indent, bool arrayChild, json_string & output) const json_nothrow {
     const bool formatted = indent != 0xFFFFFFFF;
 	WriteComment(indent, output);
 	
@@ -241,7 +241,7 @@ void internalJSONNode::Write(unsigned int indent, bool arrayChild, json_string &
 		if (json_likely(fetched)){
 	#endif
 			output += JSON_TEXT("\"");
-			JSONWorker::UnfixString(_string, _string_encoded, output);  //It's already been fetched, meaning that it's unescaped
+			JSONWGWorker::UnfixString(_string, _string_encoded, output);  //It's already been fetched, meaning that it's unescaped
 			output += JSON_TEXT("\"");  
 	#if !defined(JSON_PREPARSE) && defined(JSON_READ_PRIORITY)
 		} else {

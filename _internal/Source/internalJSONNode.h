@@ -1,5 +1,5 @@
-#ifndef INTERNAL_JSONNODE_H
-#define INTERNAL_JSONNODE_H
+#ifndef INTERNAL_JSONWGNode_H
+#define INTERNAL_JSONWGNode_H
 
 #include "JSONDebug.h"
 #include "JSONChildren.h"
@@ -14,20 +14,20 @@
     #ifdef __GNUC__
 	   #pragma pack(push, 1)
     #elif _MSC_VER
-	   #pragma pack(push, internalJSONNode_pack, 1)
+	   #pragma pack(push, internalWGJSONWGNode_pack, 1)
     #endif
 #endif
 
 /*
     This class is the work horse of libjson, it handles all of the
-    functinality of JSONNode.  This object is reference counted for
+    functinality of JSONWGNode.  This object is reference counted for
     speed and memory reasons.
 
     If JSON_REF_COUNT is not on, this internal structure still has an important
-    purpose, as it can be passed around by JSONNoders that are flagged as temporary
+    purpose, as it can be passed around by JSONWGNoders that are flagged as temporary
 */
 
-class JSONNode;  //forward declaration
+class JSONWGNode;  //forward declaration
 
 #ifndef JSON_LIBRARY
     #define DECL_SET_INTEGER(type) void Set(type) json_nothrow json_write_priority; void Set(unsigned type) json_nothrow json_write_priority;
@@ -78,25 +78,25 @@ class JSONNode;  //forward declaration
     #define initializeChildren(x) ,CHILDREN(x)
 #endif
 
-class internalJSONNode {
+class internalWGJSONWGNode {
 public:
-	LIBJSON_OBJECT(internalJSONNode);
-    internalJSONNode(char mytype = JSON_NULL) json_nothrow json_hot;
+	LIBJSON_OBJECT(internalWGJSONWGNode);
+    internalWGJSONWGNode(char mytype = JSON_NULL) json_nothrow json_hot;
     #ifdef JSON_READ_PRIORITY
-	   internalJSONNode(const json_string & unparsed) json_nothrow json_hot;
-	   internalJSONNode(const json_string & name_t, const json_string & value_t) json_nothrow json_read_priority;
+	   internalWGJSONWGNode(const json_string & unparsed) json_nothrow json_hot;
+	   internalWGJSONWGNode(const json_string & name_t, const json_string & value_t) json_nothrow json_read_priority;
     #endif
-    internalJSONNode(const internalJSONNode & orig) json_nothrow json_hot;
-    internalJSONNode & operator = (const internalJSONNode &) json_nothrow json_hot;
-    ~internalJSONNode(void) json_nothrow json_hot;
+    internalWGJSONWGNode(const internalWGJSONWGNode & orig) json_nothrow json_hot;
+    internalWGJSONWGNode & operator = (const internalWGJSONWGNode &) json_nothrow json_hot;
+    ~internalWGJSONWGNode(void) json_nothrow json_hot;
 
-    static internalJSONNode * newInternal(char mytype = JSON_NULL) json_hot;
+    static internalWGJSONWGNode * newInternal(char mytype = JSON_NULL) json_hot;
     #ifdef JSON_READ_PRIORITY
-	   static internalJSONNode * newInternal(const json_string & unparsed) json_hot;
-	   static internalJSONNode * newInternal(const json_string & name_t, const json_string & value_t) json_hot;
+	   static internalWGJSONWGNode * newInternal(const json_string & unparsed) json_hot;
+	   static internalWGJSONWGNode * newInternal(const json_string & name_t, const json_string & value_t) json_hot;
     #endif
-    static internalJSONNode * newInternal(const internalJSONNode & orig) json_hot;  //not copyable, only by this class
-    static void deleteInternal(internalJSONNode * ptr) json_nothrow json_hot;
+    static internalWGJSONWGNode * newInternal(const internalWGJSONWGNode & orig) json_hot;  //not copyable, only by this class
+    static void deleteInternal(internalWGJSONWGNode * ptr) json_nothrow json_hot;
 
     json_index_t size(void) const json_nothrow json_read_priority;
     bool empty(void) const json_nothrow;
@@ -114,23 +114,23 @@ public:
     #endif
 
     #ifdef JSON_LIBRARY
-	   void push_back(JSONNode * node) json_nothrow;
+	   void push_back(JSONWGNode * node) json_nothrow;
     #else
-	   void push_back(const JSONNode & node) json_nothrow;
+	   void push_back(const JSONWGNode & node) json_nothrow;
     #endif
     void reserve(json_index_t siz) json_nothrow;
-    void push_front(const JSONNode & node) json_nothrow;
-    JSONNode * pop_back(json_index_t pos) json_nothrow;
-    JSONNode * pop_back(const json_string & name_t) json_nothrow;
+    void push_front(const JSONWGNode & node) json_nothrow;
+    JSONWGNode * pop_back(json_index_t pos) json_nothrow;
+    JSONWGNode * pop_back(const json_string & name_t) json_nothrow;
     #ifdef JSON_CASE_INSENSITIVE_FUNCTIONS
-	   JSONNode * pop_back_nocase(const json_string & name_t) json_nothrow;
+	   JSONWGNode * pop_back_nocase(const json_string & name_t) json_nothrow;
     #endif
 
-    JSONNode * at(json_index_t pos) json_nothrow;
+    JSONWGNode * at(json_index_t pos) json_nothrow;
     //These return ** because pop_back needs them
-    JSONNode ** at(const json_string & name_t) json_nothrow;
+    JSONWGNode ** at(const json_string & name_t) json_nothrow;
     #ifdef JSON_CASE_INSENSITIVE_FUNCTIONS
-	   JSONNode ** at_nocase(const json_string & name_t) json_nothrow;
+	   JSONWGNode ** at_nocase(const json_string & name_t) json_nothrow;
     #endif
 
     void Set(const json_string & val) json_nothrow json_write_priority;
@@ -169,20 +169,20 @@ public:
 
     bool IsEqualTo(const json_string & val) const json_nothrow;
     bool IsEqualTo(bool val) const json_nothrow;
-    bool IsEqualTo(const internalJSONNode * val) const json_nothrow;
+    bool IsEqualTo(const internalWGJSONWGNode * val) const json_nothrow;
 
     template<typename T>
     bool IsEqualToNum(T val) const json_nothrow;
 
-    internalJSONNode * incRef(void) json_nothrow;
+    internalWGJSONWGNode * incRef(void) json_nothrow;
     #ifdef JSON_REF_COUNT
 	   void decRef(void) json_nothrow json_hot;
 	   bool hasNoReferences(void) json_nothrow json_hot;
     #endif
-    internalJSONNode * makeUnique(void) json_nothrow json_hot;
+    internalWGJSONWGNode * makeUnique(void) json_nothrow json_hot;
 
-    JSONNode ** begin(void) const json_nothrow;
-    JSONNode ** end(void) const json_nothrow;
+    JSONWGNode ** begin(void) const json_nothrow;
+    JSONWGNode ** end(void) const json_nothrow;
     bool Fetched(void) const json_nothrow json_hot;
     #ifdef JSON_MUTEX_CALLBACKS
 	   void _set_mutex(void * mutex, bool unset = true) json_nothrow json_cold;
@@ -245,8 +245,8 @@ public:
 
     #ifdef JSON_DEBUG
 	   #ifndef JSON_LIBRARY
-		  JSONNode Dump(size_t & totalmemory) const json_nothrow;
-		  JSONNode DumpMutex(void) const json_nothrow;
+		  JSONWGNode Dump(size_t & totalmemory) const json_nothrow;
+		  JSONWGNode DumpMutex(void) const json_nothrow;
 	   #endif
     #endif
 
@@ -290,7 +290,7 @@ public:
     #endif
 };
 
-inline internalJSONNode::internalJSONNode(char mytype) json_nothrow : _type(mytype), _name(), _name_encoded(), _string(), _string_encoded(), _value()
+inline internalWGJSONWGNode::internalWGJSONWGNode(char mytype) json_nothrow : _type(mytype), _name(), _name_encoded(), _string(), _string_encoded(), _value()
     initializeMutex(0)
     initializeRefCount(1)
     initializeFetch(true)
@@ -307,7 +307,7 @@ inline internalJSONNode::internalJSONNode(char mytype) json_nothrow : _type(myty
     #endif
 }
 
-inline internalJSONNode * internalJSONNode::incRef(void) json_nothrow {
+inline internalWGJSONWGNode * internalWGJSONWGNode::incRef(void) json_nothrow {
     #ifdef JSON_REF_COUNT
 	   ++refcount;
 	   return this;
@@ -316,27 +316,27 @@ inline internalJSONNode * internalJSONNode::incRef(void) json_nothrow {
     #endif
 }
 
-inline json_index_t internalJSONNode::size(void) const json_nothrow {
+inline json_index_t internalWGJSONWGNode::size(void) const json_nothrow {
     if (isNotContainer()) return 0;
     Fetch();
     return CHILDREN -> size();
 }
 
-inline bool internalJSONNode::empty(void) const json_nothrow {
+inline bool internalWGJSONWGNode::empty(void) const json_nothrow {
     if (isNotContainer()) return true;
     Fetch();
     return CHILDREN -> empty();
 }
 
-inline unsigned char internalJSONNode::type(void) const json_nothrow {
+inline unsigned char internalWGJSONWGNode::type(void) const json_nothrow {
     return _type;
 }
 
-inline json_string internalJSONNode::name(void) const json_nothrow {
+inline json_string internalWGJSONWGNode::name(void) const json_nothrow {
     return _name;
 }
 
-inline void internalJSONNode::setname(const json_string & newname) json_nothrow {
+inline void internalWGJSONWGNode::setname(const json_string & newname) json_nothrow {
     #ifdef JSON_LESS_MEMORY
 	   JSON_ASSERT(newname.capacity() == newname.length(), JSON_TEXT("name object too large"));
     #endif
@@ -345,46 +345,46 @@ inline void internalJSONNode::setname(const json_string & newname) json_nothrow 
 }
 
 #ifdef JSON_COMMENTS
-    inline void internalJSONNode::setcomment(const json_string & comment) json_nothrow {
+    inline void internalWGJSONWGNode::setcomment(const json_string & comment) json_nothrow {
 	   _comment = comment;
     }
 
-    inline json_string internalJSONNode::getcomment(void) const json_nothrow {
+    inline json_string internalWGJSONWGNode::getcomment(void) const json_nothrow {
 	   return _comment;
     }
 #endif
 
-inline bool internalJSONNode::IsEqualTo(const json_string & val) const json_nothrow {
+inline bool internalWGJSONWGNode::IsEqualTo(const json_string & val) const json_nothrow {
     if (type() != JSON_STRING) return false;
     Fetch();
     return _string == val;
 }
 
-inline bool internalJSONNode::IsEqualTo(bool val) const json_nothrow {
+inline bool internalWGJSONWGNode::IsEqualTo(bool val) const json_nothrow {
     if (type() != JSON_BOOL) return false;
     Fetch();
     return val == _value._bool;
 }
 
 template<typename T>
-inline bool internalJSONNode::IsEqualToNum(T val) const json_nothrow {
+inline bool internalWGJSONWGNode::IsEqualToNum(T val) const json_nothrow {
     if (type() != JSON_NUMBER) return false;
     Fetch();
     return (json_number)val == _value._number;
 }
 
 #ifdef JSON_REF_COUNT
-    inline void internalJSONNode::decRef(void) json_nothrow {
+    inline void internalWGJSONWGNode::decRef(void) json_nothrow {
 	   JSON_ASSERT(refcount != 0, JSON_TEXT("decRef on a 0 refcount internal"));
 	   --refcount;
     }
 
-    inline bool internalJSONNode::hasNoReferences(void) json_nothrow {
+    inline bool internalWGJSONWGNode::hasNoReferences(void) json_nothrow {
 	   return refcount == 0;
     }
 #endif
 
-inline internalJSONNode * internalJSONNode::makeUnique(void) json_nothrow {
+inline internalWGJSONWGNode * internalWGJSONWGNode::makeUnique(void) json_nothrow {
     #ifdef JSON_REF_COUNT
 	   if (refcount > 1){
 		  decRef();
@@ -398,12 +398,12 @@ inline internalJSONNode * internalJSONNode::makeUnique(void) json_nothrow {
 }
 
 #if !defined(JSON_PREPARSE) && defined(JSON_READ_PRIORITY)
-    inline void internalJSONNode::SetFetched(bool val) const json_nothrow {
+    inline void internalWGJSONWGNode::SetFetched(bool val) const json_nothrow {
 	   fetched = val;
     }
 #endif
 
-inline bool internalJSONNode::Fetched(void) const json_nothrow {
+inline bool internalWGJSONWGNode::Fetched(void) const json_nothrow {
     #if !defined(JSON_PREPARSE) && defined(JSON_READ_PRIORITY)
 	   return fetched;
     #else
@@ -411,28 +411,28 @@ inline bool internalJSONNode::Fetched(void) const json_nothrow {
     #endif
 }
 
-inline JSONNode ** internalJSONNode::begin(void) const json_nothrow {
+inline JSONWGNode ** internalWGJSONWGNode::begin(void) const json_nothrow {
     JSON_ASSERT_SAFE(isContainer(), json_global(ERROR_NON_CONTAINER) + JSON_TEXT("begin"), return 0;);
     Fetch();
     return CHILDREN -> begin();
 }
 
-inline JSONNode ** internalJSONNode::end(void) const json_nothrow {
+inline JSONWGNode ** internalWGJSONWGNode::end(void) const json_nothrow {
     JSON_ASSERT_SAFE(isContainer(), json_global(ERROR_NON_CONTAINER) + JSON_TEXT("end"), return 0;);
     Fetch();
     return CHILDREN -> end();
 }
 
-inline JSONNode * internalJSONNode::at(json_index_t pos) json_nothrow {
+inline JSONWGNode * internalWGJSONWGNode::at(json_index_t pos) json_nothrow {
     JSON_ASSERT_SAFE(isContainer(), JSON_TEXT("calling at on non-container type"), return 0;);
     Fetch();
     return (*CHILDREN)[pos];
 }
 
 #if defined(JSON_LESS_MEMORY) && defined(__GNUC__)
-    inline void internalJSONNode::reserve(json_index_t __attribute__((unused)) siz) json_nothrow
+    inline void internalWGJSONWGNode::reserve(json_index_t __attribute__((unused)) siz) json_nothrow
 #else
-    inline void internalJSONNode::reserve(json_index_t siz) json_nothrow
+    inline void internalWGJSONWGNode::reserve(json_index_t siz) json_nothrow
 #endif
 {
     JSON_ASSERT_SAFE(isContainer(), json_global(ERROR_NON_CONTAINER) + JSON_TEXT("reserve"), return;);
@@ -453,7 +453,7 @@ inline JSONNode * internalJSONNode::at(json_index_t pos) json_nothrow {
     #endif
 
     #define IMP_SMALLER_INT_CAST_OP(_type, type_max, type_min)\
-	   inline internalJSONNode::operator _type() const json_nothrow {\
+	   inline internalWGJSONWGNode::operator _type() const json_nothrow {\
 		  JSON_ASSERT(_value._number > type_min, _string + json_global(ERROR_LOWER_RANGE) + JSON_TEXT(#_type));\
 		  JSON_ASSERT(_value._number < type_max, _string + json_global(ERROR_UPPER_RANGE) + JSON_TEXT(#_type));\
 		  JSON_ASSERT(_value._number == (json_number)((_type)(_value._number)), json_string(JSON_TEXT("(")) + json_string(JSON_TEXT(#_type)) + json_string(JSON_TEXT(") will truncate ")) + _string);\
@@ -473,7 +473,7 @@ inline JSONNode * internalJSONNode::at(json_index_t pos) json_nothrow {
     #endif
 #endif
 
-inline internalJSONNode::operator json_string() const json_nothrow {
+inline internalWGJSONWGNode::operator json_string() const json_nothrow {
     Fetch();
     return _string;
 }
@@ -481,14 +481,14 @@ inline internalJSONNode::operator json_string() const json_nothrow {
 
 #ifndef JSON_LIBRARY
     #ifndef JSON_ISO_STRICT
-	   inline internalJSONNode::operator float() const json_nothrow {
+	   inline internalWGJSONWGNode::operator float() const json_nothrow {
 		  return static_cast<float>(static_cast<long double>(*this));
 	   }
-	   inline internalJSONNode::operator double() const json_nothrow {
+	   inline internalWGJSONWGNode::operator double() const json_nothrow {
 		  return static_cast<double>(static_cast<long double>(*this));
 	   }
     #else
-	   inline internalJSONNode::operator float() const json_nothrow {
+	   inline internalWGJSONWGNode::operator float() const json_nothrow {
 		  return static_cast<float>(static_cast<double>(*this));
 	   }
     #endif
@@ -498,7 +498,7 @@ inline internalJSONNode::operator json_string() const json_nothrow {
     #ifdef __GNUC__
 	   #pragma pack(pop)
     #elif _MSC_VER
-	   #pragma pack(pop, internalJSONNode_pack,)
+	   #pragma pack(pop, internalWGJSONWGNode_pack,)
     #endif
 #endif
 #endif

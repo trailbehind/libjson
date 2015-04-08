@@ -1,7 +1,7 @@
 #include "JSONNode.h"
 
 #define IMPLEMENT_CTOR(type)\
-    JSONNode::JSONNode(const json_string & name_t, type value_t) json_nothrow : internal(internalJSONNode::newInternal()){\
+    JSONWGNode::JSONWGNode(const json_string & name_t, type value_t) json_nothrow : internal(internalWGJSONWGNode::newInternal()){\
 	   internal -> Set(value_t);\
 	   internal -> setname(name_t);\
 	   LIBJSON_CTOR;\
@@ -9,7 +9,7 @@
 IMPLEMENT_FOR_ALL_TYPES(IMPLEMENT_CTOR)
 
 #ifndef JSON_LIBRARY
-    JSONNode::JSONNode(const json_string & name_t, const json_char * value_t) json_nothrow : internal(internalJSONNode::newInternal()){
+    JSONWGNode::JSONWGNode(const json_string & name_t, const json_char * value_t) json_nothrow : internal(internalWGJSONWGNode::newInternal()){
 	   internal -> Set(json_string(value_t));
 	   internal -> setname(name_t);
 	   LIBJSON_CTOR;
@@ -18,53 +18,53 @@ IMPLEMENT_FOR_ALL_TYPES(IMPLEMENT_CTOR)
 
 #if (defined(JSON_PREPARSE) && defined(JSON_READ_PRIORITY))
     #include "JSONWorker.h"
-    JSONNode JSONNode::stringType(const json_string & str){
-        JSONNode res;
+    JSONWGNode JSONWGNode::stringType(const json_string & str){
+        JSONWGNode res;
         res.set_name(json_global(EMPTY_JSON_STRING));
         #ifdef JSON_LESS_MEMORY
-            res = JSONWorker::FixString(str, res.internal, false);
+            res = JSONWGWorker::FixString(str, res.internal, false);
         #else
-            res = JSONWorker::FixString(str, res.internal -> _string_encoded);
+            res = JSONWGWorker::FixString(str, res.internal -> _string_encoded);
         #endif
         return res;
     }
 
-    void JSONNode::set_name_(const json_string & newname) json_nothrow {
+    void JSONWGNode::set_name_(const json_string & newname) json_nothrow {
         #ifdef JSON_LESS_MEMORY
-            json_string _newname = JSONWorker::FixString(newname, internal, true);
+            json_string _newname = JSONWGWorker::FixString(newname, internal, true);
         #else
-            json_string _newname = JSONWorker::FixString(newname, internal -> _name_encoded);
+            json_string _newname = JSONWGWorker::FixString(newname, internal -> _name_encoded);
         #endif
         set_name(_newname);
     }
 #endif
 
 #ifdef JSON_CASTABLE
-    JSONNode JSONNode::as_node(void) const json_nothrow {
+    JSONWGNode JSONWGNode::as_node(void) const json_nothrow {
 	   JSON_CHECK_INTERNAL();
 	   if (type() == JSON_NODE){
 		  return *this;
 	   } else if (type() == JSON_ARRAY){
-		  JSONNode res(duplicate());
+		  JSONWGNode res(duplicate());
 		  res.internal -> _type = JSON_NODE;
 		  return res;
 	   }
 	   #ifdef JSON_MUTEX_CALLBACKS
 		  if (internal -> mylock != 0){
-			 JSONNode res(JSON_NODE);
+			 JSONWGNode res(JSON_NODE);
 			 res.set_mutex(internal -> mylock);
 			 return res;
 		  }
 	   #endif
-	   return JSONNode(JSON_NODE);
+	   return JSONWGNode(JSON_NODE);
     }
 
-    JSONNode JSONNode::as_array(void) const json_nothrow {
+    JSONWGNode JSONWGNode::as_array(void) const json_nothrow {
 	   JSON_CHECK_INTERNAL();
 	   if (type() == JSON_ARRAY){
 		  return *this;
 	   } else if (type() == JSON_NODE){
-		  JSONNode res(duplicate());
+		  JSONWGNode res(duplicate());
 		  res.internal -> _type = JSON_ARRAY;
 		  json_foreach(res.internal -> CHILDREN, runner){
 			 (*runner) -> clear_name();
@@ -73,15 +73,15 @@ IMPLEMENT_FOR_ALL_TYPES(IMPLEMENT_CTOR)
 	   }
 	   #ifdef JSON_MUTEX_CALLBACKS
 		  if (internal -> mylock != 0){
-			 JSONNode res(JSON_ARRAY);
+			 JSONWGNode res(JSON_ARRAY);
 			 res.set_mutex(internal -> mylock);
 			 return res;
 		  }
 	   #endif
-	   return JSONNode(JSON_ARRAY);
+	   return JSONWGNode(JSON_ARRAY);
     }
 
-    void JSONNode::cast(char newtype) json_nothrow {
+    void JSONWGNode::cast(char newtype) json_nothrow {
 	   JSON_CHECK_INTERNAL();
 	   if (newtype == type()) return;
 
@@ -111,9 +111,9 @@ IMPLEMENT_FOR_ALL_TYPES(IMPLEMENT_CTOR)
 
 //different just to supress the warning
 #ifdef JSON_REF_COUNT
-void JSONNode::merge(JSONNode & other) json_nothrow {
+void JSONWGNode::merge(JSONWGNode & other) json_nothrow {
 #else
-void JSONNode::merge(JSONNode &) json_nothrow {
+void JSONWGNode::merge(JSONWGNode &) json_nothrow {
 #endif
     JSON_CHECK_INTERNAL();
     #ifdef JSON_REF_COUNT
@@ -128,31 +128,31 @@ void JSONNode::merge(JSONNode &) json_nothrow {
 }
 
 #ifdef JSON_REF_COUNT
-    void JSONNode::merge(JSONNode * other) json_nothrow {
+    void JSONWGNode::merge(JSONWGNode * other) json_nothrow {
 	   JSON_CHECK_INTERNAL();
 	   if (internal == other -> internal) return;
 	   *other = *this;
     }
 
     //different just to supress the warning
-    void JSONNode::merge(unsigned int num, ...) json_nothrow {
+    void JSONWGNode::merge(unsigned int num, ...) json_nothrow {
 #else
-    void JSONNode::merge(unsigned int, ...) json_nothrow {
+    void JSONWGNode::merge(unsigned int, ...) json_nothrow {
 #endif
     JSON_CHECK_INTERNAL();
     #ifdef JSON_REF_COUNT
 	   va_list args;
 	   va_start(args, num);
 	   for(unsigned int i = 0; i < num; ++i){
-		  merge(va_arg(args, JSONNode*));
+		  merge(va_arg(args, JSONWGNode*));
 	   }
 	   va_end(args);
     #endif
 }
 
-JSONNode JSONNode::duplicate(void) const json_nothrow {
+JSONWGNode JSONWGNode::duplicate(void) const json_nothrow {
     JSON_CHECK_INTERNAL();
-    JSONNode mycopy(*this);
+    JSONWGNode mycopy(*this);
     #ifdef JSON_REF_COUNT
 	   JSON_ASSERT(internal == mycopy.internal, JSON_TEXT("copy ctor failed to ref count correctly"));
 	   mycopy.makeUniqueInternal();
@@ -161,7 +161,7 @@ JSONNode JSONNode::duplicate(void) const json_nothrow {
     return mycopy;
 }
 
-JSONNode & JSONNode::at(json_index_t pos) json_throws(std::out_of_range) {
+JSONWGNode & JSONWGNode::at(json_index_t pos) json_throws(std::out_of_range) {
     JSON_CHECK_INTERNAL();
     if (json_unlikely(pos >= internal -> size())){
 	   JSON_FAIL(JSON_TEXT("at() out of bounds"));
@@ -170,7 +170,7 @@ JSONNode & JSONNode::at(json_index_t pos) json_throws(std::out_of_range) {
     return (*this)[pos];
 }
 
-const JSONNode & JSONNode::at(json_index_t pos) const json_throws(std::out_of_range) {
+const JSONWGNode & JSONWGNode::at(json_index_t pos) const json_throws(std::out_of_range) {
     JSON_CHECK_INTERNAL();
     if (json_unlikely(pos >= internal -> size())){
 	   JSON_FAIL(JSON_TEXT("at() const out of bounds"));
@@ -179,34 +179,34 @@ const JSONNode & JSONNode::at(json_index_t pos) const json_throws(std::out_of_ra
     return (*this)[pos];
 }
 
-JSONNode & JSONNode::operator[](json_index_t pos) json_nothrow {
+JSONWGNode & JSONWGNode::operator[](json_index_t pos) json_nothrow {
     JSON_CHECK_INTERNAL();
     JSON_ASSERT(pos < internal -> size(), JSON_TEXT("[] out of bounds"));
     makeUniqueInternal();
     return *(internal -> at(pos));
 }
 
-const JSONNode & JSONNode::operator[](json_index_t pos) const json_nothrow {
+const JSONWGNode & JSONWGNode::operator[](json_index_t pos) const json_nothrow {
     JSON_CHECK_INTERNAL();
     JSON_ASSERT(pos < internal -> size(), JSON_TEXT("[] const out of bounds"));
     return *(internal -> at(pos));
 }
 
-JSONNode & JSONNode::at(const json_string & name_t) json_throws(std::out_of_range) {
+JSONWGNode & JSONWGNode::at(const json_string & name_t) json_throws(std::out_of_range) {
     JSON_CHECK_INTERNAL();
     JSON_ASSERT(type() == JSON_NODE, json_global(ERROR_NON_ITERATABLE) + JSON_TEXT("at"));
     makeUniqueInternal();
-    if (JSONNode ** res = internal -> at(name_t)){
+    if (JSONWGNode ** res = internal -> at(name_t)){
 	   return *(*res);
     }
     JSON_FAIL(json_string(JSON_TEXT("at could not find child by name: ")) + name_t);
     json_throw(std::out_of_range(json_global(EMPTY_STD_STRING)));
 }
 
-const JSONNode & JSONNode::at(const json_string & name_t) const json_throws(std::out_of_range) {
+const JSONWGNode & JSONWGNode::at(const json_string & name_t) const json_throws(std::out_of_range) {
     JSON_CHECK_INTERNAL();
     JSON_ASSERT(type() == JSON_NODE, json_global(ERROR_NON_ITERATABLE) + JSON_TEXT("at"));
-    if (JSONNode ** res = internal -> at(name_t)){
+    if (JSONWGNode ** res = internal -> at(name_t)){
 	   return *(*res);
     }
     JSON_FAIL(json_string(JSON_TEXT("at const could not find child by name: ")) + name_t);
@@ -214,21 +214,21 @@ const JSONNode & JSONNode::at(const json_string & name_t) const json_throws(std:
 }
 
 #ifdef JSON_CASE_INSENSITIVE_FUNCTIONS
-    JSONNode & JSONNode::at_nocase(const json_string & name_t) json_throws(std::out_of_range) {
+    JSONWGNode & JSONWGNode::at_nocase(const json_string & name_t) json_throws(std::out_of_range) {
 	   JSON_CHECK_INTERNAL();
 	   JSON_ASSERT(type() == JSON_NODE, json_global(ERROR_NON_ITERATABLE) + JSON_TEXT("at_nocase"));
 	   makeUniqueInternal();
-	   if (JSONNode ** res = internal -> at_nocase(name_t)){
+	   if (JSONWGNode ** res = internal -> at_nocase(name_t)){
 		  return *(*res);
 	   }
 	   JSON_FAIL(json_string(JSON_TEXT("at_nocase could not find child by name: ")) + name_t);
 	   json_throw(std::out_of_range(json_global(EMPTY_STD_STRING)));
     }
 
-    const JSONNode & JSONNode::at_nocase(const json_string & name_t) const json_throws(std::out_of_range) {
+    const JSONWGNode & JSONWGNode::at_nocase(const json_string & name_t) const json_throws(std::out_of_range) {
 	   JSON_CHECK_INTERNAL();
 	   JSON_ASSERT(type() == JSON_NODE, json_global(ERROR_NON_ITERATABLE) + JSON_TEXT("at_nocase"));
-	   if (JSONNode ** res = internal -> at_nocase(name_t)){
+	   if (JSONWGNode ** res = internal -> at_nocase(name_t)){
 		  return *(*res);
 	   }
 	   JSON_FAIL(json_string(JSON_TEXT("at_nocase const could not find child by name: ")) + name_t);
@@ -239,16 +239,16 @@ const JSONNode & JSONNode::at(const json_string & name_t) const json_throws(std:
 #ifndef JSON_LIBRARY
     struct auto_delete {
 	   public:
-		  auto_delete(JSONNode * node) json_nothrow : mynode(node){};
-		  ~auto_delete(void) json_nothrow { JSONNode::deleteJSONNode(mynode); };
-		  JSONNode * mynode;
+		  auto_delete(JSONWGNode * node) json_nothrow : mynode(node){};
+		  ~auto_delete(void) json_nothrow { JSONWGNode::deleteJSONWGNode(mynode); };
+		  JSONWGNode * mynode;
 	   private:
 		  auto_delete(const auto_delete &);
 		  auto_delete & operator = (const auto_delete &);
     };
 #endif
 
-JSONNode JSON_PTR_LIB JSONNode::pop_back(json_index_t pos) json_throws(std::out_of_range) {
+JSONWGNode JSON_PTR_LIB JSONWGNode::pop_back(json_index_t pos) json_throws(std::out_of_range) {
     JSON_CHECK_INTERNAL();
     if (json_unlikely(pos >= internal -> size())){
 	   JSON_FAIL(JSON_TEXT("pop_back out of bounds"));
@@ -263,13 +263,13 @@ JSONNode JSON_PTR_LIB JSONNode::pop_back(json_index_t pos) json_throws(std::out_
     #endif
 }
 
-JSONNode JSON_PTR_LIB JSONNode::pop_back(const json_string & name_t) json_throws(std::out_of_range) {
+JSONWGNode JSON_PTR_LIB JSONWGNode::pop_back(const json_string & name_t) json_throws(std::out_of_range) {
     JSON_CHECK_INTERNAL();
     JSON_ASSERT(type() == JSON_NODE, json_global(ERROR_NON_ITERATABLE) + JSON_TEXT("pop_back"));
     #ifdef JSON_LIBRARY
 	   return internal -> pop_back(name_t);
     #else
-	   if (JSONNode * res = internal -> pop_back(name_t)){
+	   if (JSONWGNode * res = internal -> pop_back(name_t)){
 		  auto_delete temp(res);
 		  return *(temp.mynode);
 	   }
@@ -279,13 +279,13 @@ JSONNode JSON_PTR_LIB JSONNode::pop_back(const json_string & name_t) json_throws
 }
 
 #ifdef JSON_CASE_INSENSITIVE_FUNCTIONS
-    JSONNode JSON_PTR_LIB JSONNode::pop_back_nocase(const json_string & name_t) json_throws(std::out_of_range) {
+    JSONWGNode JSON_PTR_LIB JSONWGNode::pop_back_nocase(const json_string & name_t) json_throws(std::out_of_range) {
 	   JSON_CHECK_INTERNAL();
 	   JSON_ASSERT(type() == JSON_NODE, json_global(ERROR_NON_ITERATABLE) + JSON_TEXT("pop_back_no_case"));
 	   #ifdef JSON_LIBRARY
 		  return internal -> pop_back_nocase(name_t);
 	   #else
-		  if (JSONNode * res = internal -> pop_back_nocase(name_t)){
+		  if (JSONWGNode * res = internal -> pop_back_nocase(name_t)){
 			 auto_delete temp(res);
 			 return *(temp.mynode);
 		  }
@@ -300,56 +300,56 @@ JSONNode JSON_PTR_LIB JSONNode::pop_back(const json_string & name_t) json_throws
 	memory_pool<NODEPOOL> json_node_mempool;
 #endif
 		
-void JSONNode::deleteJSONNode(JSONNode * ptr) json_nothrow {
+void JSONWGNode::deleteJSONWGNode(JSONWGNode * ptr) json_nothrow {
 	#ifdef JSON_MEMORY_POOL
-		ptr -> ~JSONNode();
+		ptr -> ~JSONWGNode();
 		json_node_mempool.deallocate((void*)ptr);
 	#elif defined(JSON_MEMORY_CALLBACKS)
-		ptr -> ~JSONNode();
-		libjson_free<JSONNode>(ptr);
+		ptr -> ~JSONWGNode();
+		libjson_free<JSONWGNode>(ptr);
 	#else
 		delete ptr;
 	#endif
 }
 		
-inline JSONNode * _newJSONNode(const JSONNode & orig) {
+inline JSONWGNode * _newJSONWGNode(const JSONWGNode & orig) {
 	#ifdef JSON_MEMORY_POOL
-		return new((JSONNode*)json_node_mempool.allocate()) JSONNode(orig);
+		return new((JSONWGNode*)json_node_mempool.allocate()) JSONWGNode(orig);
 	#elif defined(JSON_MEMORY_CALLBACKS)
-		return new(json_malloc<JSONNode>(1)) JSONNode(orig);
+		return new(json_malloc<JSONWGNode>(1)) JSONWGNode(orig);
 	#else
-		return new JSONNode(orig);
+		return new JSONWGNode(orig);
 	#endif
 }
 		
-JSONNode * JSONNode::newJSONNode(const JSONNode & orig    JSON_MUTEX_COPY_DECL) {
+JSONWGNode * JSONWGNode::newJSONWGNode(const JSONWGNode & orig    JSON_MUTEX_COPY_DECL) {
 	#ifdef JSON_MUTEX_CALLBACKS
 		if (parentMutex != 0){
-			JSONNode * temp = _newJSONNode(orig);
+			JSONWGNode * temp = _newJSONWGNode(orig);
 			temp -> set_mutex(parentMutex);
 			return temp;
 		}
 	#endif
-	return _newJSONNode(orig);
+	return _newJSONWGNode(orig);
 }
 		
-JSONNode * JSONNode::newJSONNode(internalJSONNode * internal_t) {
+JSONWGNode * JSONWGNode::newJSONWGNode(internalWGJSONWGNode * internal_t) {
 	#ifdef JSON_MEMORY_POOL
-		return new((JSONNode*)json_node_mempool.allocate()) JSONNode(internal_t);
+		return new((JSONWGNode*)json_node_mempool.allocate()) JSONWGNode(internal_t);
 	#elif defined(JSON_MEMORY_CALLBACKS)
-		return new(json_malloc<JSONNode>(1)) JSONNode(internal_t);
+		return new(json_malloc<JSONWGNode>(1)) JSONWGNode(internal_t);
 	#else
-		return new JSONNode(internal_t);
+		return new JSONWGNode(internal_t);
 	#endif
 }
 		
-JSONNode * JSONNode::newJSONNode_Shallow(const JSONNode & orig) {
+JSONWGNode * JSONWGNode::newJSONWGNode_Shallow(const JSONWGNode & orig) {
 	#ifdef JSON_MEMORY_POOL
-		return new((JSONNode*)json_node_mempool.allocate()) JSONNode(true, const_cast<JSONNode &>(orig));
+		return new((JSONWGNode*)json_node_mempool.allocate()) JSONWGNode(true, const_cast<JSONWGNode &>(orig));
 	#elif defined(JSON_MEMORY_CALLBACKS)
-		return new(json_malloc<JSONNode>(1)) JSONNode(true, const_cast<JSONNode &>(orig));
+		return new(json_malloc<JSONWGNode>(1)) JSONWGNode(true, const_cast<JSONWGNode &>(orig));
 	#else
-		return new JSONNode(true, const_cast<JSONNode &>(orig));
+		return new JSONWGNode(true, const_cast<JSONWGNode &>(orig));
 	#endif
 }
 		

@@ -86,7 +86,7 @@
 
 
 /*
- *  JSON_REF_COUNT causes libjson to reference count JSONNodes, which makes copying
+ *  JSON_REF_COUNT causes libjson to reference count JSONWGNodes, which makes copying
  *  and passing them around much faster.  It is recommended that this stay on for
  *  most uses
  */
@@ -153,7 +153,7 @@
 
 /*
  *  JSON_MUTEX_CALLBACKS exposes functions to register callbacks to lock and unlock
- *  mutexs and functions to lock and unlock JSONNodes and all of it's children.  This 
+ *  mutexs and functions to lock and unlock JSONWGNodes and all of it's children.  This 
  *  does not prevent other threads from accessing the node, but will prevent them from
  *  locking it. It is much easier for the end programmer to allow libjson to manage
  *  your mutexs because of reference counting and manipulating trees, libjson automatically

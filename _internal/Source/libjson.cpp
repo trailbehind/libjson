@@ -8,8 +8,8 @@
 #include "../../libjson.h"
 #ifdef JSON_LIBRARY
 
-    #include "JSONNode.h"
-    #include "JSONWorker.h"
+    #include "JSONWGNode.h"
+    #include "JSONWGWorker.h"
     #include "JSONValidator.h"
     #include "JSONStream.h"
 	#include "JSONGlobals.h"
@@ -57,12 +57,12 @@
 	   libjson_free<void>(str);
     }
 
-    void json_delete(JSONNODE * node){
+    void json_delete(JSONWGNode * node){
 	   JSON_ASSERT_SAFE(node, JSON_TEXT("deleting null ptr"), return;);
 	   #ifdef JSON_MEMORY_MANAGE
 		  json_global(NODE_HANDLER).remove(node);
 	   #endif
-	   JSONNode::deleteJSONNode((JSONNode *)node);
+	   JSONWGNode::deleteJSONWGNode((JSONWGNode *)node);
     }
 
     #ifdef JSON_MEMORY_MANAGE
@@ -76,22 +76,22 @@
     #endif
 
     #ifdef JSON_READ_PRIORITY
-	   JSONNODE * json_parse(json_const json_char * json){
+	   JSONWGNode * json_parse(json_const json_char * json){
 		  JSON_ASSERT_SAFE(json, JSON_TEXT("null ptr to json_parse"), return 0;);
 		  json_try {
 			 //use this constructor to simply copy reference instead of copying the temp
-			 return MANAGER_INSERT(JSONNode::newJSONNode_Shallow(JSONWorker::parse(TOCONST_CSTR(json))));
+			 return MANAGER_INSERT(JSONWGNode::newJSONWGNode_Shallow(JSONWGWorker::parse(TOCONST_CSTR(json))));
 		  } json_catch (std::invalid_argument, (void)0; )
 		  #ifndef JSON_NO_EXCEPTIONS
 			 return 0;
 		  #endif
 	   }
 
-	   JSONNODE * json_parse_unformatted(json_const json_char * json){
+	   JSONWGNode * json_parse_unformatted(json_const json_char * json){
 		  JSON_ASSERT_SAFE(json, JSON_TEXT("null ptr to json_parse"), return 0;);
 		  json_try {
 			 //use this constructor to simply copy reference instead of copying the temp
-			 return MANAGER_INSERT(JSONNode::newJSONNode_Shallow(JSONWorker::parse_unformatted(TOCONST_CSTR(json))));
+			 return MANAGER_INSERT(JSONWGNode::newJSONWGNode_Shallow(JSONWGWorker::parse_unformatted(TOCONST_CSTR(json))));
 		  } json_catch(std::invalid_argument, (void)0; )
 		  #ifndef JSON_NO_EXCEPTIONS
 			 return 0;
@@ -101,12 +101,12 @@
 
     json_char * json_strip_white_space(json_const json_char * json){
 	   JSON_ASSERT_SAFE(json, JSON_TEXT("null ptr to json_strip_white_space"), return 0;);
-	   return alreadyCString(JSONWorker::RemoveWhiteSpaceAndCommentsC(TOCONST_CSTR(json), false));
+	   return alreadyCString(JSONWGWorker::RemoveWhiteSpaceAndCommentsC(TOCONST_CSTR(json), false));
     }
 
     #ifdef JSON_VALIDATE
 	   #ifdef JSON_DEPRECATED_FUNCTIONS
-		  JSONNODE * json_validate(json_const json_char * json){
+		  JSONWGNode * json_validate(json_const json_char * json){
 			 JSON_ASSERT_SAFE(json, JSON_TEXT("null ptr to json_validate"), return 0;);
 			 if (json_is_valid(json)){
 				return json_parse(json);
@@ -123,7 +123,7 @@
 			 }
 		  #endif
 		  json_auto<json_char> s;
-		  s.set(JSONWorker::RemoveWhiteSpaceAndCommentsC(json, false));
+		  s.set(JSONWGWorker::RemoveWhiteSpaceAndCommentsC(json, false));
 		  return (json_bool_t)JSONValidator::isValidRoot(s.ptr);
 	   }
 
@@ -149,33 +149,33 @@
     #ifdef JSON_MUTEX_CALLBACKS
 	   #ifdef JSON_MUTEX_MANAGE
 		  void json_register_mutex_callbacks(json_mutex_callback_t lock, json_mutex_callback_t unlock, json_mutex_callback_t destroy, void * manager_lock){
-			 JSONNode::register_mutex_callbacks(lock, unlock, manager_lock);
-			 JSONNode::register_mutex_destructor(destroy);
+			 JSONWGNode::register_mutex_callbacks(lock, unlock, manager_lock);
+			 JSONWGNode::register_mutex_destructor(destroy);
 		  }
 
 	   #else
 		  void json_register_mutex_callbacks(json_mutex_callback_t lock, json_mutex_callback_t unlock, void * manager_lock){
-			 JSONNode::register_mutex_callbacks(lock, unlock, manager_lock);
+			 JSONWGNode::register_mutex_callbacks(lock, unlock, manager_lock);
 		  }
 	   #endif
 
 	   void json_set_global_mutex(void * mutex){
-		  JSONNode::set_global_mutex(mutex);
+		  JSONWGNode::set_global_mutex(mutex);
 	   }
 
-	   void json_set_mutex(JSONNODE * node, void * mutex){
+	   void json_set_mutex(JSONWGNode * node, void * mutex){
 		  JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_set_mutex"), return;);
-		  ((JSONNode*)node) -> set_mutex(mutex);
+		  ((JSONWGNode*)node) -> set_mutex(mutex);
 	   }
 
-	   void json_lock(JSONNODE * node, int threadid){
+	   void json_lock(JSONWGNode * node, int threadid){
 		  JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_lock"), return;);
-		  ((JSONNode*)node) -> lock(threadid);
+		  ((JSONWGNode*)node) -> lock(threadid);
 	   }
 
-	   void json_unlock(JSONNODE * node, int threadid){
+	   void json_unlock(JSONWGNode * node, int threadid){
 		  JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_unlock"), return;);
-		  ((JSONNode*)node) -> unlock(threadid);
+		  ((JSONWGNode*)node) -> unlock(threadid);
 	   }
     #endif
 
@@ -210,170 +210,170 @@
 
 
     /*
-	stuff that's in class JSONNode
+	stuff that's in class JSONWGNode
 	*/
     //ctors
-    JSONNODE * json_new_a(json_const json_char * name, json_const json_char * value){
+    JSONWGNode * json_new_a(json_const json_char * name, json_const json_char * value){
 	   if (!name) name = EMPTY_CSTRING;
 	   JSON_ASSERT_SAFE(value, JSON_TEXT("null value to json_new_a"), value = EMPTY_CSTRING;);
 		#ifdef JSON_MEMORY_POOL
-			return MANAGER_INSERT(new((JSONNode*)json_node_mempool.allocate()) JSONNode(TOCONST_CSTR(name), json_string(TOCONST_CSTR(value))));
+			return MANAGER_INSERT(new((JSONWGNode*)json_node_mempool.allocate()) JSONWGNode(TOCONST_CSTR(name), json_string(TOCONST_CSTR(value))));
 		#elif defined(JSON_MEMORY_CALLBACKS)
-		  return MANAGER_INSERT(new(json_malloc<JSONNode>(1)) JSONNode(TOCONST_CSTR(name), json_string(TOCONST_CSTR(value))));
+		  return MANAGER_INSERT(new(json_malloc<JSONWGNode>(1)) JSONWGNode(TOCONST_CSTR(name), json_string(TOCONST_CSTR(value))));
 	   #else
-		  return MANAGER_INSERT(new JSONNode(TOCONST_CSTR(name), json_string(TOCONST_CSTR(value))));
+		  return MANAGER_INSERT(new JSONWGNode(TOCONST_CSTR(name), json_string(TOCONST_CSTR(value))));
 	   #endif
     }
 
-    JSONNODE * json_new_i(json_const json_char * name, json_int_t value){
+    JSONWGNode * json_new_i(json_const json_char * name, json_int_t value){
 	   if (!name) name = EMPTY_CSTRING;
 		#ifdef JSON_MEMORY_POOL
-			return MANAGER_INSERT(new((JSONNode*)json_node_mempool.allocate()) JSONNode(TOCONST_CSTR(name), value));
+			return MANAGER_INSERT(new((JSONWGNode*)json_node_mempool.allocate()) JSONWGNode(TOCONST_CSTR(name), value));
 		#elif defined(JSON_MEMORY_CALLBACKS)
-		  return MANAGER_INSERT(new(json_malloc<JSONNode>(1)) JSONNode(TOCONST_CSTR(name), value));
+		  return MANAGER_INSERT(new(json_malloc<JSONWGNode>(1)) JSONWGNode(TOCONST_CSTR(name), value));
 	   #else
-		  return MANAGER_INSERT(new JSONNode(TOCONST_CSTR(name), value));
+		  return MANAGER_INSERT(new JSONWGNode(TOCONST_CSTR(name), value));
 	   #endif
     }
 
-    JSONNODE * json_new_f(json_const json_char * name, json_number value){
+    JSONWGNode * json_new_f(json_const json_char * name, json_number value){
 	   if (!name) name = EMPTY_CSTRING;
 		#ifdef JSON_MEMORY_POOL
-			return MANAGER_INSERT(new((JSONNode*)json_node_mempool.allocate()) JSONNode(TOCONST_CSTR(name), value));
+			return MANAGER_INSERT(new((JSONWGNode*)json_node_mempool.allocate()) JSONWGNode(TOCONST_CSTR(name), value));
 		#elif defined(JSON_MEMORY_CALLBACKS)
-		  return MANAGER_INSERT(new(json_malloc<JSONNode>(1)) JSONNode(TOCONST_CSTR(name), value));
+		  return MANAGER_INSERT(new(json_malloc<JSONWGNode>(1)) JSONWGNode(TOCONST_CSTR(name), value));
 	   #else
-		  return MANAGER_INSERT(new JSONNode(TOCONST_CSTR(name), value));
+		  return MANAGER_INSERT(new JSONWGNode(TOCONST_CSTR(name), value));
 	   #endif
     }
 
-    JSONNODE * json_new_b(json_const json_char * name, json_bool_t value){
+    JSONWGNode * json_new_b(json_const json_char * name, json_bool_t value){
 	   if (!name) name = EMPTY_CSTRING;
 		#ifdef JSON_MEMORY_POOL
-			return MANAGER_INSERT(new((JSONNode*)json_node_mempool.allocate()) JSONNode(TOCONST_CSTR(name), static_cast<bool>(value)));
+			return MANAGER_INSERT(new((JSONWGNode*)json_node_mempool.allocate()) JSONWGNode(TOCONST_CSTR(name), static_cast<bool>(value)));
 		#elif defined(JSON_MEMORY_CALLBACKS)
-		  return MANAGER_INSERT(new(json_malloc<JSONNode>(1)) JSONNode(TOCONST_CSTR(name), static_cast<bool>(value)));
+		  return MANAGER_INSERT(new(json_malloc<JSONWGNode>(1)) JSONWGNode(TOCONST_CSTR(name), static_cast<bool>(value)));
 	   #else
-		  return MANAGER_INSERT(new JSONNode(TOCONST_CSTR(name), static_cast<bool>(value)));
+		  return MANAGER_INSERT(new JSONWGNode(TOCONST_CSTR(name), static_cast<bool>(value)));
 	   #endif
     }
 
-    JSONNODE * json_new(char type){
+    JSONWGNode * json_new(char type){
 		#ifdef JSON_MEMORY_POOL
-			return MANAGER_INSERT(new((JSONNode*)json_node_mempool.allocate()) JSONNode(type));
+			return MANAGER_INSERT(new((JSONWGNode*)json_node_mempool.allocate()) JSONWGNode(type));
 	    #elif defined(JSON_MEMORY_CALLBACKS)
-		  return MANAGER_INSERT(new(json_malloc<JSONNode>(1)) JSONNode(type));
+		  return MANAGER_INSERT(new(json_malloc<JSONWGNode>(1)) JSONWGNode(type));
 	   #else
-		  return MANAGER_INSERT(new JSONNode(type));
+		  return MANAGER_INSERT(new JSONWGNode(type));
 	   #endif
     }
 
-	JSONNODE * json_copy(json_const JSONNODE * orig){
+	JSONWGNode * json_copy(json_const JSONWGNode * orig){
 		JSON_ASSERT_SAFE(orig, JSON_TEXT("null orig to json_copy"), return 0;);
 		#ifdef JSON_MEMORY_POOL
-			return MANAGER_INSERT(new((JSONNode*)json_node_mempool.allocate()) JSONNode(*((JSONNode*)orig)));
+			return MANAGER_INSERT(new((JSONWGNode*)json_node_mempool.allocate()) JSONWGNode(*((JSONWGNode*)orig)));
 		#elif defined(JSON_MEMORY_CALLBACKS)
-			return MANAGER_INSERT(new(json_malloc<JSONNode>(1)) JSONNode(*((JSONNode*)orig)));
+			return MANAGER_INSERT(new(json_malloc<JSONWGNode>(1)) JSONWGNode(*((JSONWGNode*)orig)));
 		#else
-			return MANAGER_INSERT(new JSONNode(*((JSONNode*)orig)));
+			return MANAGER_INSERT(new JSONWGNode(*((JSONWGNode*)orig)));
 		#endif
 	}
 
-    JSONNODE * json_duplicate(json_const JSONNODE * orig){
+    JSONWGNode * json_duplicate(json_const JSONWGNode * orig){
 	   JSON_ASSERT_SAFE(orig, JSON_TEXT("null orig to json_duplicate"), return 0;);
-	   return MANAGER_INSERT(JSONNode::newJSONNode_Shallow(((JSONNode*)orig) -> duplicate()));
+	   return MANAGER_INSERT(JSONWGNode::newJSONWGNode_Shallow(((JSONWGNode*)orig) -> duplicate()));
     }
 
     //assignment
-    void json_set_a(JSONNODE * node, json_const json_char * value){
+    void json_set_a(JSONWGNode * node, json_const json_char * value){
 	   JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_set_a"), return;);
 	   JSON_ASSERT_SAFE(value, JSON_TEXT("null value to json_set_a"), value = EMPTY_CSTRING;);
-	   *((JSONNode*)node) = json_string(TOCONST_CSTR(value));
+	   *((JSONWGNode*)node) = json_string(TOCONST_CSTR(value));
     }
 
-    void json_set_i(JSONNODE * node, json_int_t value){
+    void json_set_i(JSONWGNode * node, json_int_t value){
 	   JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_set_i"), return;);
-	   *((JSONNode*)node) = value;
+	   *((JSONWGNode*)node) = value;
     }
 
-    void json_set_f(JSONNODE * node, json_number value){
+    void json_set_f(JSONWGNode * node, json_number value){
 	   JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_set_f"), return;);
-	   *((JSONNode*)node) = value;
+	   *((JSONWGNode*)node) = value;
     }
 
-    void json_set_b(JSONNODE * node, json_bool_t value){
+    void json_set_b(JSONWGNode * node, json_bool_t value){
 	   JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_set_b"), return;);
-	   *((JSONNode*)node) = static_cast<bool>(value);
+	   *((JSONWGNode*)node) = static_cast<bool>(value);
     }
 
-    void json_set_n(JSONNODE * node, json_const JSONNODE * orig){
+    void json_set_n(JSONWGNode * node, json_const JSONWGNode * orig){
 	   JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_set_n"), return;);
 	   JSON_ASSERT_SAFE(orig, JSON_TEXT("null node to json_set_n"), return;);
-	   *((JSONNode*)node) = *((JSONNode*)orig);
+	   *((JSONWGNode*)node) = *((JSONWGNode*)orig);
     }
 
 
     //inspectors
-    char json_type(json_const JSONNODE * node){
+    char json_type(json_const JSONWGNode * node){
 	   JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_type"), return JSON_NULL;);
-	   return ((JSONNode*)node) -> type();
+	   return ((JSONWGNode*)node) -> type();
     }
 
-    json_index_t json_size(json_const JSONNODE * node){
+    json_index_t json_size(json_const JSONWGNode * node){
 	   JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_size"), return 0;);
-	   return ((JSONNode*)node) -> size();
+	   return ((JSONWGNode*)node) -> size();
     }
 
-    json_bool_t json_empty(json_const JSONNODE * node){
+    json_bool_t json_empty(json_const JSONWGNode * node){
 	   JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_empty"), return true;);
-	   return (json_bool_t)(((JSONNode*)node) -> empty());
+	   return (json_bool_t)(((JSONWGNode*)node) -> empty());
     }
 
-    json_char * json_name(json_const JSONNODE * node){
+    json_char * json_name(json_const JSONWGNode * node){
 	   JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_name"), return toCString(EMPTY_CSTRING););
-	   return toCString(((JSONNode*)node) -> name());
+	   return toCString(((JSONWGNode*)node) -> name());
     }
 
     #ifdef JSON_COMMENTS
-	   json_char * json_get_comment(json_const JSONNODE * node){
+	   json_char * json_get_comment(json_const JSONWGNode * node){
 		  JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_get_comment"), return toCString(EMPTY_CSTRING););
-		  return toCString(((JSONNode*)node) -> get_comment());
+		  return toCString(((JSONWGNode*)node) -> get_comment());
 	   }
     #endif
 
-    json_char * json_as_string(json_const JSONNODE * node){
+    json_char * json_as_string(json_const JSONWGNode * node){
 	   JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_as_string"), return toCString(EMPTY_CSTRING););
-	   return toCString(((JSONNode*)node) -> as_string());
-	   //return toCString(static_cast<json_string>(*((JSONNode*)node)));
+	   return toCString(((JSONWGNode*)node) -> as_string());
+	   //return toCString(static_cast<json_string>(*((JSONWGNode*)node)));
     }
 
-    json_int_t json_as_int(json_const JSONNODE * node){
+    json_int_t json_as_int(json_const JSONWGNode * node){
 	   JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_as_int"), return 0;);
-	   return ((JSONNode*)node) -> as_int();
-	   //return static_cast<json_int_t>(*((JSONNode*)node));
+	   return ((JSONWGNode*)node) -> as_int();
+	   //return static_cast<json_int_t>(*((JSONWGNode*)node));
     }
 
-    json_number json_as_float(json_const JSONNODE * node){
+    json_number json_as_float(json_const JSONWGNode * node){
 	   JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_as_float"), return 0.0f;);
-	   return ((JSONNode*)node) -> as_float();
-	   //return static_cast<json_number>(*((JSONNode*)node));
+	   return ((JSONWGNode*)node) -> as_float();
+	   //return static_cast<json_number>(*((JSONWGNode*)node));
     }
 
-    json_bool_t json_as_bool(json_const JSONNODE * node){
+    json_bool_t json_as_bool(json_const JSONWGNode * node){
 	   JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_as_bool"), return false;);
-	   return ((JSONNode*)node) -> as_bool();
-	   //return (json_bool_t)static_cast<bool>(*((JSONNode*)node));
+	   return ((JSONWGNode*)node) -> as_bool();
+	   //return (json_bool_t)static_cast<bool>(*((JSONWGNode*)node));
     }
 
 	#ifdef JSON_CASTABLE
-		JSONNODE * json_as_node(json_const JSONNODE * node){
+		JSONWGNode * json_as_node(json_const JSONWGNode * node){
 		   JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_as_node"), return 0;);
-		   return MANAGER_INSERT(JSONNode::newJSONNode_Shallow(((JSONNode*)node) -> as_node()));
+		   return MANAGER_INSERT(JSONWGNode::newJSONWGNode_Shallow(((JSONWGNode*)node) -> as_node()));
 		}
 
-		JSONNODE * json_as_array(json_const JSONNODE * node){
+		JSONWGNode * json_as_array(json_const JSONWGNode * node){
 		   JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_as_array"), return 0;);
-		   return MANAGER_INSERT(JSONNode::newJSONNode_Shallow(((JSONNode*)node) -> as_array()));
+		   return MANAGER_INSERT(JSONWGNode::newJSONWGNode_Shallow(((JSONWGNode*)node) -> as_array()));
 		}
 	#endif
 
@@ -394,9 +394,9 @@
     #endif
 
     #ifdef JSON_BINARY
-	   void * json_as_binary(json_const JSONNODE * node, unsigned long * size){
+	   void * json_as_binary(json_const JSONWGNode * node, unsigned long * size){
 		  JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_as_binary"), if (size){*size = 0;} return 0;);
-		  return returnDecode64(((JSONNode*)node) -> as_binary(), size);
+		  return returnDecode64(((JSONWGNode*)node) -> as_binary(), size);
 
 	   }
     #endif
@@ -418,97 +418,97 @@
     #endif
 
     #ifdef JSON_WRITE_PRIORITY
-	   json_char * json_write(json_const JSONNODE * node){
+	   json_char * json_write(json_const JSONWGNode * node){
 		  JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_write"), return toCString(EMPTY_CSTRING););
-		  return toCString(((JSONNode*)node) -> write());
+		  return toCString(((JSONWGNode*)node) -> write());
 	   }
 
-	   json_char * json_write_formatted(json_const JSONNODE * node){
+	   json_char * json_write_formatted(json_const JSONWGNode * node){
 		  JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_write_formatted"), return toCString(EMPTY_CSTRING););
-		  return toCString(((JSONNode*)node) -> write_formatted());
+		  return toCString(((JSONWGNode*)node) -> write_formatted());
 	   }
     #endif
 
     //modifiers
-    void json_set_name(JSONNODE * node, json_const json_char * name){
+    void json_set_name(JSONWGNode * node, json_const json_char * name){
 	   JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_set_name"), return;);
 	   JSON_ASSERT_SAFE(name, JSON_TEXT("null name to json_set_name"), name = EMPTY_CSTRING;);
-	   ((JSONNode*)node) -> set_name(TOCONST_CSTR(name));
+	   ((JSONWGNode*)node) -> set_name(TOCONST_CSTR(name));
     }
 
     #ifdef JSON_COMMENTS
-	   void json_set_comment(JSONNODE * node, json_const json_char * comment){
+	   void json_set_comment(JSONWGNode * node, json_const json_char * comment){
 		  JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_set_comment"), return;);
 		  JSON_ASSERT_SAFE(comment, JSON_TEXT("null name to json_set_comment"), comment = EMPTY_CSTRING;);
-		  ((JSONNode*)node) -> set_comment(TOCONST_CSTR(comment));
+		  ((JSONWGNode*)node) -> set_comment(TOCONST_CSTR(comment));
 	   }
     #endif
 
-    void json_clear(JSONNODE * node){
+    void json_clear(JSONWGNode * node){
 	   JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_clear"), return;);
-	   ((JSONNode*)node) -> clear();
+	   ((JSONWGNode*)node) -> clear();
     }
 
-    void json_nullify(JSONNODE * node){
+    void json_nullify(JSONWGNode * node){
 	   JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_nullify"), return;);
-	   ((JSONNode*)node) -> nullify();
+	   ((JSONWGNode*)node) -> nullify();
     }
 
-    void json_swap(JSONNODE * node, JSONNODE * node2){
+    void json_swap(JSONWGNode * node, JSONWGNode * node2){
 	   JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_swap"), return;);
 	   JSON_ASSERT_SAFE(node2, JSON_TEXT("null node to json_swap"), return;);
-	   ((JSONNode*)node) -> swap(*(JSONNode*)node2);
+	   ((JSONWGNode*)node) -> swap(*(JSONWGNode*)node2);
     }
 
-    void json_merge(JSONNODE * node, JSONNODE * node2){
+    void json_merge(JSONWGNode * node, JSONWGNode * node2){
 	   JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_merge"), return;);
 	   JSON_ASSERT_SAFE(node2, JSON_TEXT("null node to json_merge"), return;);
-	   ((JSONNode*)node) -> merge(*(JSONNode*)node2);
+	   ((JSONWGNode*)node) -> merge(*(JSONWGNode*)node2);
     }
 
     #if !defined(JSON_PREPARSE) && defined(JSON_READ_PRIORITY)
-	   void json_preparse(JSONNODE * node){
+	   void json_preparse(JSONWGNode * node){
 		  JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_preparse"), return;);
-		  ((JSONNode*)node) -> preparse();
+		  ((JSONWGNode*)node) -> preparse();
 	   }
     #endif
 
     #ifdef JSON_BINARY
-	   void json_set_binary(JSONNODE * node, json_const void * data, unsigned long length){
+	   void json_set_binary(JSONWGNode * node, json_const void * data, unsigned long length){
 		  JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_swap"), return;);
-		  JSON_ASSERT_SAFE(data, JSON_TEXT("null data to json_set_binary"), *((JSONNode*)node) = EMPTY_CSTRING; return;);
-		  ((JSONNode*)node) -> set_binary((unsigned char *)data, (size_t)length);
+		  JSON_ASSERT_SAFE(data, JSON_TEXT("null data to json_set_binary"), *((JSONWGNode*)node) = EMPTY_CSTRING; return;);
+		  ((JSONWGNode*)node) -> set_binary((unsigned char *)data, (size_t)length);
 	   }
     #endif
 
     #ifdef JSON_CASTABLE
-	   void json_cast(JSONNODE * node, char type){
+	   void json_cast(JSONWGNode * node, char type){
 		  JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_cast"), return;);
-		  ((JSONNode*)node) -> cast(type);
+		  ((JSONWGNode*)node) -> cast(type);
 	   }
     #endif
 
     //children access
-    void json_reserve(JSONNODE * node, json_index_t siz){
+    void json_reserve(JSONWGNode * node, json_index_t siz){
 	   JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_reserve"), return;);
-	   ((JSONNode*)node) -> reserve(siz);
+	   ((JSONWGNode*)node) -> reserve(siz);
     }
 
-    JSONNODE * json_at(JSONNODE * node, unsigned int pos){
+    JSONWGNode * json_at(JSONWGNode * node, unsigned int pos){
 	   JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_at"), return 0;);
 	   json_try {
-		  return &((JSONNode*)node) -> at(pos);
+		  return &((JSONWGNode*)node) -> at(pos);
 	   } json_catch (std::out_of_range, (void)0; )
 	   #ifndef JSON_NO_EXCEPTIONS
 		  return 0;
 	   #endif
     }
 
-    JSONNODE * json_get(JSONNODE * node, json_const json_char * name){
+    JSONWGNode * json_get(JSONWGNode * node, json_const json_char * name){
 	   JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_get"), return 0;);
 	   JSON_ASSERT_SAFE(name, JSON_TEXT("null node to json_get.  Did you mean to use json_at?"), return 0;);
 	   json_try {
-		  return &((JSONNode*)node) -> at(TOCONST_CSTR(name));
+		  return &((JSONWGNode*)node) -> at(TOCONST_CSTR(name));
 	   } json_catch (std::out_of_range, (void)0; )
 	   #ifndef JSON_NO_EXCEPTIONS
 		  return 0;
@@ -517,89 +517,89 @@
 
 
 	#ifdef JSON_CASE_INSENSITIVE_FUNCTIONS
-	   JSONNODE * json_get_nocase(JSONNODE * node, json_const json_char * name){
+	   JSONWGNode * json_get_nocase(JSONWGNode * node, json_const json_char * name){
 		  JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_at_nocase"), return 0;);
 		  JSON_ASSERT_SAFE(name, JSON_TEXT("null name to json_at_nocase"), return 0;);
 		  json_try {
-			 return &((JSONNode*)node) -> at_nocase(TOCONST_CSTR(name));
+			 return &((JSONWGNode*)node) -> at_nocase(TOCONST_CSTR(name));
 		  } json_catch (std::out_of_range, (void)0; )
 		  #ifndef JSON_NO_EXCEPTIONS
 			 return 0;
 		  #endif
 	   }
 
-	   JSONNODE * json_pop_back_nocase(JSONNODE * node, json_const json_char * name){
+	   JSONWGNode * json_pop_back_nocase(JSONWGNode * node, json_const json_char * name){
 		  JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_pop_back_nocase"), return 0;);
 		  JSON_ASSERT_SAFE(name, JSON_TEXT("null name to json_pop_back_nocase"), return 0;);
-		  return MANAGER_INSERT(((JSONNode*)node) -> pop_back_nocase(TOCONST_CSTR(name)));
+		  return MANAGER_INSERT(((JSONWGNode*)node) -> pop_back_nocase(TOCONST_CSTR(name)));
 	   }
     #endif
 
-    void json_push_back(JSONNODE * node, JSONNODE * node2){
+    void json_push_back(JSONWGNode * node, JSONWGNode * node2){
 	   JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_push_back"), return;);
 	   JSON_ASSERT_SAFE(node2, JSON_TEXT("null node2 to json_push_back"), return;);
 	   #ifdef JSON_MEMORY_MANAGE
 		  json_global(NODE_HANDLER).remove(node2);
 	   #endif
-	   ((JSONNode*)node) -> push_back((JSONNode*)node2);
+	   ((JSONWGNode*)node) -> push_back((JSONWGNode*)node2);
     }
 
-    JSONNODE * json_pop_back_at(JSONNODE * node, unsigned int pos){
+    JSONWGNode * json_pop_back_at(JSONWGNode * node, unsigned int pos){
 	   JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_pop_back_i"), return 0;);
-	   return MANAGER_INSERT(((JSONNode*)node) -> pop_back(pos));
+	   return MANAGER_INSERT(((JSONWGNode*)node) -> pop_back(pos));
     }
 
-    JSONNODE * json_pop_back(JSONNODE * node, json_const json_char * name){
+    JSONWGNode * json_pop_back(JSONWGNode * node, json_const json_char * name){
 	   JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_pop_back"), return 0;);
 	   JSON_ASSERT_SAFE(name, JSON_TEXT("null name to json_pop_back.  Did you mean to use json_pop_back_at?"), return 0;);
-	   return MANAGER_INSERT(((JSONNode*)node) -> pop_back(TOCONST_CSTR(name)));
+	   return MANAGER_INSERT(((JSONWGNode*)node) -> pop_back(TOCONST_CSTR(name)));
     }
 
     #ifdef JSON_ITERATORS
-	   JSONNODE_ITERATOR json_find(JSONNODE * node, json_const json_char * name){
-		  return (JSONNODE_ITERATOR)(((JSONNode*)node) -> find(TOCONST_CSTR(name)));
+	   JSONWGNode_ITERATOR json_find(JSONWGNode * node, json_const json_char * name){
+		  return (JSONWGNode_ITERATOR)(((JSONWGNode*)node) -> find(TOCONST_CSTR(name)));
 	   }
 
 	   #ifdef JSON_CASE_INSENSITIVE_FUNCTIONS
-		  JSONNODE_ITERATOR json_find_nocase(JSONNODE * node, json_const json_char * name){
-			 return (JSONNODE_ITERATOR)(((JSONNode*)node) -> find_nocase(TOCONST_CSTR(name)));
+		  JSONWGNode_ITERATOR json_find_nocase(JSONWGNode * node, json_const json_char * name){
+			 return (JSONWGNode_ITERATOR)(((JSONWGNode*)node) -> find_nocase(TOCONST_CSTR(name)));
 		  }
 	   #endif
 
-	   JSONNODE_ITERATOR json_erase(JSONNODE * node, JSONNODE_ITERATOR it){
-		  return (JSONNODE_ITERATOR)(((JSONNode*)node) -> erase((JSONNode**)it));
+	   JSONWGNode_ITERATOR json_erase(JSONWGNode * node, JSONWGNode_ITERATOR it){
+		  return (JSONWGNode_ITERATOR)(((JSONWGNode*)node) -> erase((JSONWGNode**)it));
 	   }
 
-	   JSONNODE_ITERATOR json_erase_multi(JSONNODE * node, JSONNODE_ITERATOR start, JSONNODE_ITERATOR end){
-		  return (JSONNODE_ITERATOR)(((JSONNode*)node) -> erase((JSONNode**)start, (JSONNode**)end));
+	   JSONWGNode_ITERATOR json_erase_multi(JSONWGNode * node, JSONWGNode_ITERATOR start, JSONWGNode_ITERATOR end){
+		  return (JSONWGNode_ITERATOR)(((JSONWGNode*)node) -> erase((JSONWGNode**)start, (JSONWGNode**)end));
 	   }
 
-	   JSONNODE_ITERATOR json_insert(JSONNODE * node, JSONNODE_ITERATOR it, JSONNODE * node2){
+	   JSONWGNode_ITERATOR json_insert(JSONWGNode * node, JSONWGNode_ITERATOR it, JSONWGNode * node2){
 		  #ifdef JSON_MEMORY_MANAGE
 			 json_global(NODE_HANDLER).remove(node2);
 		  #endif
-		  return (JSONNODE_ITERATOR)(((JSONNode*)node) -> insert((JSONNode**)it, (JSONNode*)node2));
+		  return (JSONWGNode_ITERATOR)(((JSONWGNode*)node) -> insert((JSONWGNode**)it, (JSONWGNode*)node2));
 	   }
 
-	   JSONNODE_ITERATOR json_insert_multi(JSONNODE * node, JSONNODE_ITERATOR it, JSONNODE_ITERATOR start, JSONNODE_ITERATOR end){
-		  return (JSONNODE_ITERATOR)(((JSONNode*)node) -> insert((JSONNode**)it, (JSONNode**)start, (JSONNode**)end));
+	   JSONWGNode_ITERATOR json_insert_multi(JSONWGNode * node, JSONWGNode_ITERATOR it, JSONWGNode_ITERATOR start, JSONWGNode_ITERATOR end){
+		  return (JSONWGNode_ITERATOR)(((JSONWGNode*)node) -> insert((JSONWGNode**)it, (JSONWGNode**)start, (JSONWGNode**)end));
 	   }
 
 	   //iterator functions
-	   JSONNODE_ITERATOR json_begin(JSONNODE * node){
-		  return (JSONNODE_ITERATOR)(((JSONNode*)node) -> begin());
+	   JSONWGNode_ITERATOR json_begin(JSONWGNode * node){
+		  return (JSONWGNode_ITERATOR)(((JSONWGNode*)node) -> begin());
 	   }
 
-	   JSONNODE_ITERATOR json_end(JSONNODE * node){
-		  return (JSONNODE_ITERATOR)(((JSONNode*)node) -> end());
+	   JSONWGNode_ITERATOR json_end(JSONWGNode * node){
+		  return (JSONWGNode_ITERATOR)(((JSONWGNode*)node) -> end());
 	   }
     #endif
 
     //comparison
-    json_bool_t json_equal(JSONNODE * node, JSONNODE * node2){
+    json_bool_t json_equal(JSONWGNode * node, JSONWGNode * node2){
 	   JSON_ASSERT_SAFE(node, JSON_TEXT("null node to json_equal"), return false;);
 	   JSON_ASSERT_SAFE(node2, JSON_TEXT("null node2 to json_equal"), return false;);
-	   return (json_bool_t)(*((JSONNode*)node) == *((JSONNode*)node2));
+	   return (json_bool_t)(*((JSONWGNode*)node) == *((JSONWGNode*)node2));
     }
 
 #endif //JSON_LIBRARY

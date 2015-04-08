@@ -106,7 +106,7 @@ void JSONStream::parse(void) json_nothrow {
 			     }
 			  #endif
 			  START_MEM_SCOPE
-				 JSONNode temp(JSONWorker::parse(buffer.substr(pos, end - pos + 1)));
+				 JSONWGNode temp(JSONWGWorker::parse(buffer.substr(pos, end - pos + 1)));
 				 #ifndef JSON_LIBRARY
 					call(temp, getIdentifier());
 				 #else
@@ -126,7 +126,7 @@ void JSONStream::parse(void) json_nothrow {
 					
 					json_auto<json_char> s;
 					size_t len;
-					s.set(JSONWorker::RemoveWhiteSpace(json_string(buffer.c_str() + pos), len, false));
+					s.set(JSONWGWorker::RemoveWhiteSpace(json_string(buffer.c_str() + pos), len, false));
 					
 					
 					if (!JSONValidator::isValidPartialRoot(s.ptr)){

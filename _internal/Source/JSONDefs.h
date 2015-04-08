@@ -133,11 +133,11 @@ typedef void (*json_free_t)(void *);
     typedef void * (*json_malloc_t)(size_t);
     typedef void * (*json_realloc_t)(void *, size_t);
 #else
-    #define JSONNODE void  /* so that JSONNODE* is void* */
-    typedef JSONNODE** JSONNODE_ITERATOR;
+    #define JSONWGNode void  /* so that JSONWGNode* is void* */
+    typedef JSONWGNode** JSONWGNode_ITERATOR;
     #ifdef JSON_STREAM
 	   #define JSONSTREAM void
-	    typedef void (*json_stream_callback_t)(JSONNODE *, void * identifier);
+	    typedef void (*json_stream_callback_t)(JSONWGNode *, void * identifier);
     #endif
     typedef void * (*json_malloc_t)(unsigned long);
     typedef void * (*json_realloc_t)(void *, unsigned long);

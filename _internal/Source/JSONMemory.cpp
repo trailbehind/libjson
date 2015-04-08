@@ -1,7 +1,7 @@
 #include "JSONMemory.h"
 
 #ifdef JSON_MEMORY_MANAGE
-    #include "JSONNode.h"
+    #include "JSONWGNode.h"
     void auto_expand::purge(void) json_nothrow {
 	   for(JSON_MAP(void *, void *)::iterator i = mymap.begin(), en = mymap.end(); i != en; ++i){
 		  #if defined(JSON_DEBUG) || defined(JSON_SAFE)
@@ -14,8 +14,8 @@
     }
 
     void auto_expand_node::purge(void) json_nothrow {
-	   for(JSON_MAP(void *, JSONNode *)::iterator i = mymap.begin(), en = mymap.end(); i != en; ++i){
-		  JSONNode::deleteJSONNode((JSONNode *)i -> second);
+	   for(JSON_MAP(void *, JSONWGNode *)::iterator i = mymap.begin(), en = mymap.end(); i != en; ++i){
+		  JSONWGNode::deleteJSONWGNode((JSONWGNode *)i -> second);
 	   }
     }
 

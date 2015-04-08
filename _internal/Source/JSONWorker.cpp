@@ -1,32 +1,32 @@
 #include "JSONWorker.h"
 
-bool used_ascii_one = false;  //used to know whether or not to check for intermediates when writing, once flipped, can't be unflipped
+bool wgused_ascii_one = false;  //used to know whether or not to check for intermediates when writing, once flipped, can't be unflipped
 inline json_char ascii_one(void) json_nothrow {
-	used_ascii_one = true;
+	wgused_ascii_one = true;
 	return JSON_TEXT('\1');
 }
 
 #ifdef JSON_READ_PRIORITY
 
-JSONNode JSONWorker::parse(const json_string & json) json_throws(std::invalid_argument) {
+JSONWGNode JSONWGWorker::parse(const json_string & json) json_throws(std::invalid_argument) {
 	json_auto<json_char> s;
 	size_t len;
 	s.set(RemoveWhiteSpace(json, len, true));
 	return _parse_unformatted(s.ptr, s.ptr + len);
 }
 
-JSONNode JSONWorker::parse_unformatted(const json_string & json) json_throws(std::invalid_argument) {
+JSONWGNode JSONWGWorker::parse_unformatted(const json_string & json) json_throws(std::invalid_argument) {
     #if defined JSON_DEBUG || defined JSON_SAFE
 	   #ifndef JSON_NO_EXCEPTIONS
 		  JSON_ASSERT_SAFE((json[0] == JSON_TEXT('{')) || (json[0] == JSON_TEXT('[')), JSON_TEXT("Not JSON!"), throw std::invalid_argument(json_global(EMPTY_STD_STRING)););
 	   #else
-		  JSON_ASSERT_SAFE((json[0] == JSON_TEXT('{')) || (json[0] == JSON_TEXT('[')), JSON_TEXT("Not JSON!"), return JSONNode(JSON_NULL););
+		  JSON_ASSERT_SAFE((json[0] == JSON_TEXT('{')) || (json[0] == JSON_TEXT('[')), JSON_TEXT("Not JSON!"), return JSONWGNode(JSON_NULL););
 	   #endif
     #endif
 	return _parse_unformatted(json.data(), json.data() + json.length());
 }
 
-JSONNode JSONWorker::_parse_unformatted(const json_char * json, const json_char * const end) json_throws(std::invalid_argument) {
+JSONWGNode JSONWGWorker::_parse_unformatted(const json_char * json, const json_char * const end) json_throws(std::invalid_argument) {
     #ifdef JSON_COMMENTS
 	   json_char firstchar = *json;
 	   json_string _comment;
@@ -64,11 +64,11 @@ JSONNode JSONWorker::_parse_unformatted(const json_char * json, const json_char 
 			 }
 		  #endif
 		  #ifdef JSON_COMMENTS
-			 JSONNode foo(json_string(runner, end - runner));
+			 JSONWGNode foo(json_string(runner, end - runner));
 			 foo.set_comment(_comment);
-			 return JSONNode(true, foo);  //forces it to simply return the original interal, even with ref counting off
+			 return JSONWGNode(true, foo);  //forces it to simply return the original interal, even with ref counting off
 		  #else
-			 return JSONNode(json_string(json, end - json));
+			 return JSONWGNode(json_string(json, end - json));
 		  #endif
     }
 
@@ -76,7 +76,7 @@ JSONNode JSONWorker::_parse_unformatted(const json_char * json, const json_char 
     #ifndef JSON_NO_EXCEPTIONS
 	   throw std::invalid_argument(json_global(EMPTY_STD_STRING));
     #else
-	   return JSONNode(JSON_NULL);
+	   return JSONWGNode(JSON_NULL);
     #endif
 }
 #endif
@@ -120,12 +120,12 @@ JSONNode JSONWorker::_parse_unformatted(const json_char * json, const json_char 
 
 #if defined(JSON_READ_PRIORITY) || defined(JSON_STREAM)
 	#if (JSON_READ_PRIORITY == HIGH) && (!(defined(JSON_LESS_MEMORY)))
-		#define FIND_NEXT_RELEVANT(ch, vt, po) JSONWorker::FindNextRelevant<ch>(vt, po)
+		#define FIND_NEXT_RELEVANT(ch, vt, po) JSONWGWorker::FindNextRelevant<ch>(vt, po)
 		template<json_char ch>
-		size_t JSONWorker::FindNextRelevant(const json_string & value_t, const size_t pos) json_nothrow {
+		size_t JSONWGWorker::FindNextRelevant(const json_string & value_t, const size_t pos) json_nothrow {
 	#else
-		#define FIND_NEXT_RELEVANT(ch, vt, po) JSONWorker::FindNextRelevant(ch, vt, po)
-		size_t JSONWorker::FindNextRelevant(json_char ch, const json_string & value_t, const size_t pos) json_nothrow {
+		#define FIND_NEXT_RELEVANT(ch, vt, po) JSONWGWorker::FindNextRelevant(ch, vt, po)
+		size_t JSONWGWorker::FindNextRelevant(json_char ch, const json_string & value_t, const size_t pos) json_nothrow {
 	#endif
 		json_string::const_iterator start = value_t.begin();
 		json_string::const_iterator e = value_t.end();
@@ -239,21 +239,21 @@ inline void SingleLineComment(const json_char * & p, const json_char * const end
 }
 
 #ifdef JSON_READ_PRIORITY
-    json_char * JSONWorker::RemoveWhiteSpace(const json_string & value_t, size_t & len, bool escapeQuotes) json_nothrow  {
+    json_char * JSONWGWorker::RemoveWhiteSpace(const json_string & value_t, size_t & len, bool escapeQuotes) json_nothrow  {
 		json_char * result = PRIVATE_REMOVEWHITESPACE(true, value_t, escapeQuotes, len); 
 		result[len] = JSON_TEXT('\0');
 		return result;
     }
 #endif
 
-json_char * JSONWorker::RemoveWhiteSpaceAndCommentsC(const json_string & value_t, bool escapeQuotes) json_nothrow {
+json_char * JSONWGWorker::RemoveWhiteSpaceAndCommentsC(const json_string & value_t, bool escapeQuotes) json_nothrow {
 	size_t len;
 	json_char * result = PRIVATE_REMOVEWHITESPACE(false, value_t, escapeQuotes, len);
 	result[len] = JSON_TEXT('\0');
 	return result;
 }
 
-json_string JSONWorker::RemoveWhiteSpaceAndComments(const json_string & value_t, bool escapeQuotes) json_nothrow {
+json_string JSONWGWorker::RemoveWhiteSpaceAndComments(const json_string & value_t, bool escapeQuotes) json_nothrow {
 	json_auto<json_char> s;
     size_t len;
 	s.set(PRIVATE_REMOVEWHITESPACE(false, value_t, escapeQuotes, len)); 
@@ -273,7 +273,7 @@ json_string JSONWorker::RemoveWhiteSpaceAndComments(const json_string & value_t,
 	   return (((hi << 10) & 0x1FFC00) + 0x10000) | lo & 0x3FF;
     }
 
-    void JSONWorker::UTF(const json_char * & pos, json_string & result, const json_char * const end) json_nothrow {
+    void JSONWGWorker::UTF(const json_char * & pos, json_string & result, const json_char * const end) json_nothrow {
 		JSON_ASSERT_SAFE(((long)end - (long)pos) > 4, JSON_TEXT("UTF will go out of bounds"), return;);
 	   json_uchar first = UTF8(pos, end);
 	   if (json_unlikely((first > 0xD800) && (first < 0xDBFF) &&
@@ -293,7 +293,7 @@ json_string JSONWorker::RemoveWhiteSpaceAndComments(const json_string & value_t,
     }
 #endif
 
-json_uchar JSONWorker::UTF8(const json_char * & pos, const json_char * const end) json_nothrow {
+json_uchar JSONWGWorker::UTF8(const json_char * & pos, const json_char * const end) json_nothrow {
 	JSON_ASSERT_SAFE(((long)end - (long)pos) > 4, JSON_TEXT("UTF will go out of bounds"), return JSON_TEXT('\0'););
     #ifdef JSON_UNICODE
 	   ++pos;
@@ -309,7 +309,7 @@ json_uchar JSONWorker::UTF8(const json_char * & pos, const json_char * const end
 }
 
 
-json_char JSONWorker::Hex(const json_char * & pos) json_nothrow {
+json_char JSONWGWorker::Hex(const json_char * & pos) json_nothrow {
     /*
 	takes the numeric value of the next two characters and convert them
 	\u0058 becomes 0x58
@@ -343,7 +343,7 @@ json_char JSONWorker::Hex(const json_char * & pos) json_nothrow {
     }
 #endif
 
-void JSONWorker::SpecialChar(const json_char * & pos, const json_char * const end, json_string & res) json_nothrow {
+void JSONWGWorker::SpecialChar(const json_char * & pos, const json_char * const end, json_string & res) json_nothrow {
 	JSON_ASSERT_SAFE(pos != end, JSON_TEXT("Special char termantion"), return;);
     /*
 	   Since JSON uses forward slash escaping for special characters within strings, I have to
@@ -417,7 +417,7 @@ void JSONWorker::SpecialChar(const json_char * & pos, const json_char * const en
 }
 
 #ifdef JSON_LESS_MEMORY
-    inline void doflag(const internalJSONNode * flag, bool which, bool x) json_nothrow {
+    inline void doflag(const internalWGJSONWGNode * flag, bool which, bool x) json_nothrow {
 	   if (json_likely(which)){
 		  flag -> _name_encoded = x;
 	   } else {
@@ -425,10 +425,10 @@ void JSONWorker::SpecialChar(const json_char * & pos, const json_char * const en
 	   }
     }
 
-    json_string JSONWorker::FixString(const json_string & value_t, const internalJSONNode * flag, bool which) json_nothrow {
+    json_string JSONWGWorker::FixString(const json_string & value_t, const internalWGJSONWGNode * flag, bool which) json_nothrow {
     #define setflag(x) doflag(flag, which, x)
 #else
-    json_string JSONWorker::FixString(const json_string & value_t, bool & flag) json_nothrow {
+    json_string JSONWGWorker::FixString(const json_string & value_t, bool & flag) json_nothrow {
     #define setflag(x) flag = x
 #endif
 
@@ -455,7 +455,7 @@ void JSONWorker::SpecialChar(const json_char * & pos, const json_char * const en
 
 #ifdef JSON_UNICODE
     #ifdef JSON_ESCAPE_WRITES
-	   json_string JSONWorker::toSurrogatePair(json_uchar C) json_nothrow {
+	   json_string JSONWGWorker::toSurrogatePair(json_uchar C) json_nothrow {
 		  JSON_ASSERT(sizeof(unsigned int) == 4, JSON_TEXT("size of unsigned int is not 32-bit"));
 		  JSON_ASSERT(sizeof(unsigned short) == 2, JSON_TEXT("size of unsigned short is not 16-bit"));
 		  JSON_ASSERT(sizeof(json_uchar) == 4, JSON_TEXT("json_char is not 32-bit"));
@@ -475,7 +475,7 @@ void JSONWorker::SpecialChar(const json_char * & pos, const json_char * const en
 #endif
 
 #ifdef JSON_ESCAPE_WRITES
-    json_string JSONWorker::toUTF8(json_uchar p) json_nothrow {
+    json_string JSONWGWorker::toUTF8(json_uchar p) json_nothrow {
 	   #ifdef JSON_UNICODE
 		  if (json_unlikely(p > 0xFFFF)) return toSurrogatePair(p);
 	   #endif
@@ -504,7 +504,7 @@ void JSONWorker::SpecialChar(const json_char * & pos, const json_char * const en
     }
 #endif
 
-void JSONWorker::UnfixString(const json_string & value_t, bool flag, json_string & res) json_nothrow {
+void JSONWGWorker::UnfixString(const json_string & value_t, bool flag, json_string & res) json_nothrow {
     if (!flag){
 		res += value_t;
 		return;
@@ -563,9 +563,9 @@ void JSONWorker::UnfixString(const json_string & value_t, bool flag, json_string
 #else
     #define ARRAY_PARAM bool
 #endif
-inline void JSONWorker::NewNode(const internalJSONNode * parent, const json_string & name, const json_string & value, ARRAY_PARAM) json_nothrow {
+inline void JSONWGWorker::NewNode(const internalWGJSONWGNode * parent, const json_string & name, const json_string & value, ARRAY_PARAM) json_nothrow {
     #ifdef JSON_COMMENTS
-	   JSONNode * child;
+	   JSONWGNode * child;
 	   START_MEM_SCOPE
 		  json_string _comment;
 		  START_MEM_SCOPE
@@ -589,28 +589,28 @@ inline void JSONWorker::NewNode(const internalJSONNode * parent, const json_stri
 				    goto newcomment;
 				}
 			 }
-			 internalJSONNode * myinternal;
+			 internalWGJSONWGNode * myinternal;
 			 if (array){
-				myinternal = internalJSONNode::newInternal(name, runner);
+				myinternal = internalWGJSONWGNode::newInternal(name, runner);
 			 } else {
-				myinternal = internalJSONNode::newInternal(++runner, value);
+				myinternal = internalWGJSONWGNode::newInternal(++runner, value);
 			 }
-			 child = JSONNode::newJSONNode(myinternal);
+			 child = JSONWGNode::newJSONWGNode(myinternal);
 		  END_MEM_SCOPE
 		  child -> set_comment(_comment);
 	   END_MEM_SCOPE
-	   const_cast<internalJSONNode*>(parent) -> CHILDREN -> push_back(child);   //attach it to the parent node
+	   const_cast<internalWGJSONWGNode*>(parent) -> CHILDREN -> push_back(child);   //attach it to the parent node
     #else
 	if (name.empty()){
-	   	const_cast<internalJSONNode*>(parent) -> CHILDREN -> push_back(JSONNode::newJSONNode(internalJSONNode::newInternal(name, value)));	    //attach it to the parent node
+	   	const_cast<internalWGJSONWGNode*>(parent) -> CHILDREN -> push_back(JSONWGNode::newJSONWGNode(internalWGJSONWGNode::newInternal(name, value)));	    //attach it to the parent node
 	} else {
-		const_cast<internalJSONNode*>(parent) -> CHILDREN -> push_back(JSONNode::newJSONNode(internalJSONNode::newInternal(json_string(name.begin() + 1, name.end()), value)));	    //attach it to the parent node
+		const_cast<internalWGJSONWGNode*>(parent) -> CHILDREN -> push_back(JSONWGNode::newJSONWGNode(internalWGJSONWGNode::newInternal(json_string(name.begin() + 1, name.end()), value)));	    //attach it to the parent node
 	}
     #endif
 }
 
 //Create a subarray
-void JSONWorker::DoArray(const internalJSONNode * parent, const json_string & value_t) json_nothrow {
+void JSONWGWorker::DoArray(const internalWGJSONWGNode * parent, const json_string & value_t) json_nothrow {
 	//This takes an array and creates nodes out of them
 	JSON_ASSERT(!value_t.empty(), JSON_TEXT("DoArray is empty"));
 	JSON_ASSERT_SAFE(value_t[0] == JSON_TEXT('['), JSON_TEXT("DoArray is not an array"), parent -> Nullify(); return;);
@@ -648,7 +648,7 @@ void JSONWorker::DoArray(const internalJSONNode * parent, const json_string & va
 
 
 //Create all child nodes
-void JSONWorker::DoNode(const internalJSONNode * parent, const json_string & value_t) json_nothrow {	
+void JSONWGWorker::DoNode(const internalWGJSONWGNode * parent, const json_string & value_t) json_nothrow {	
 	//This take a node and creates its members and such
 	JSON_ASSERT(!value_t.empty(), JSON_TEXT("DoNode is empty"));
 	JSON_ASSERT_SAFE(value_t[0] == JSON_TEXT('{'), JSON_TEXT("DoNode is not an node"), parent -> Nullify(); return;);

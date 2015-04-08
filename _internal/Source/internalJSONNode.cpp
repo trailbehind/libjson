@@ -4,7 +4,7 @@
 #include "JSONWorker.h"  //For fetching and parsing and such
 #include "JSONGlobals.h"
 
-internalJSONNode::internalJSONNode(const internalJSONNode & orig) json_nothrow :
+internalWGJSONWGNode::internalWGJSONWGNode(const internalWGJSONWGNode & orig) json_nothrow :
     _type(orig._type), _name(orig._name), _name_encoded(orig._name_encoded),
     _string(orig._string), _string_encoded(orig._string_encoded), _value(orig._value)
     initializeMutex(0)
@@ -20,7 +20,7 @@ internalJSONNode::internalJSONNode(const internalJSONNode & orig) json_nothrow :
 	   if (json_likely(!orig.CHILDREN -> empty())){
 		  CHILDREN -> reserve(orig.CHILDREN -> size());
 		  json_foreach(orig.CHILDREN, myrunner){
-			 CHILDREN -> push_back(JSONNode::newJSONNode((*myrunner) -> duplicate()));
+			 CHILDREN -> push_back(JSONWGNode::newJSONWGNode((*myrunner) -> duplicate()));
 		  }
 	   }
     }
@@ -37,7 +37,7 @@ internalJSONNode::internalJSONNode(const internalJSONNode & orig) json_nothrow :
 
 //this one is specialized because the root can only be array or node
 #ifdef JSON_READ_PRIORITY /*-> JSON_READ_PRIORITY */
-internalJSONNode::internalJSONNode(const json_string & unparsed) json_nothrow : _type(), _name(),_name_encoded(false), _string(unparsed), _string_encoded(), _value()
+internalWGJSONWGNode::internalWGJSONWGNode(const json_string & unparsed) json_nothrow : _type(), _name(),_name_encoded(false), _string(unparsed), _string_encoded(), _value()
     initializeMutex(0)
     initializeRefCount(1)
     initializeFetch(false)
@@ -75,7 +75,7 @@ internalJSONNode::internalJSONNode(const json_string & unparsed) json_nothrow : 
 	   case JSON_TEXT(x)
 #endif
 
-internalJSONNode::internalJSONNode(const json_string & name_t, const json_string & value_t) json_nothrow : _type(), _name_encoded(), _name(JSONWorker::FixString(name_t, NAME_ENCODED)), _string(), _string_encoded(), _value()
+internalWGJSONWGNode::internalWGJSONWGNode(const json_string & name_t, const json_string & value_t) json_nothrow : _type(), _name_encoded(), _name(JSONWGWorker::FixString(name_t, NAME_ENCODED)), _string(), _string_encoded(), _value()
     initializeMutex(0)
     initializeRefCount(1)
     initializeFetch(false)
@@ -147,7 +147,7 @@ internalJSONNode::internalJSONNode(const json_string & name_t, const json_string
 #endif /*<- */
 
 
-internalJSONNode::~internalJSONNode(void) json_nothrow {
+internalWGJSONWGNode::~internalWGJSONWGNode(void) json_nothrow {
     LIBJSON_DTOR;
     #ifdef JSON_MUTEX_CALLBACKS 
 	   _unset_mutex();
@@ -156,36 +156,36 @@ internalJSONNode::~internalJSONNode(void) json_nothrow {
 }
 
 #ifdef JSON_READ_PRIORITY
-    void internalJSONNode::FetchString(void) const json_nothrow {
+    void internalWGJSONWGNode::FetchString(void) const json_nothrow {
 	   JSON_ASSERT_SAFE(!_string.empty(), JSON_TEXT("JSON json_string type is empty?"), Nullify(); return;);
 	   JSON_ASSERT_SAFE(_string[0] == JSON_TEXT('\"'), JSON_TEXT("JSON json_string type doesn't start with a quotation?"), Nullify(); return;);
 	   JSON_ASSERT_SAFE(_string[_string.length() - 1] == JSON_TEXT('\"'), JSON_TEXT("JSON json_string type doesn't end with a quotation?"), Nullify(); return;);
-	   _string = JSONWorker::FixString(json_string(_string.begin() + 1, _string.end() - 1), STRING_ENCODED);
+	   _string = JSONWGWorker::FixString(json_string(_string.begin() + 1, _string.end() - 1), STRING_ENCODED);
 	   #ifdef JSON_LESS_MEMORY
 		  JSON_ASSERT(_string.capacity() == _string.length(), JSON_TEXT("_string object too large 2"));
 	   #endif 
     }
 
-    void internalJSONNode::FetchNode(void) const json_nothrow {
+    void internalWGJSONWGNode::FetchNode(void) const json_nothrow {
 	   JSON_ASSERT_SAFE(!_string.empty(), JSON_TEXT("JSON node type is empty?"), Nullify(); return;);
 	   JSON_ASSERT_SAFE(_string[0] == JSON_TEXT('{'), JSON_TEXT("JSON node type doesn't start with a bracket?"), Nullify(); return;);
 	   JSON_ASSERT_SAFE(_string[_string.length() - 1] == JSON_TEXT('}'), JSON_TEXT("JSON node type doesn't end with a bracket?"), Nullify(); return;);
-	   JSONWorker::DoNode(this, _string);
+	   JSONWGWorker::DoNode(this, _string);
 	   clearString(_string);
     }
 
-    void internalJSONNode::FetchArray(void) const json_nothrow {
+    void internalWGJSONWGNode::FetchArray(void) const json_nothrow {
 	   JSON_ASSERT_SAFE(!_string.empty(), JSON_TEXT("JSON node type is empty?"), Nullify(); return;);
 	   JSON_ASSERT_SAFE(_string[0] == JSON_TEXT('['), JSON_TEXT("JSON node type doesn't start with a square bracket?"), Nullify(); return;);
 	   JSON_ASSERT_SAFE(_string[_string.length() - 1] == JSON_TEXT(']'), JSON_TEXT("JSON node type doesn't end with a square bracket?"), Nullify(); return;);
-	   JSONWorker::DoArray(this, _string);
+	   JSONWGWorker::DoArray(this, _string);
 	   clearString(_string);
     }
 
 #endif
 
 //This one is used by as_int and as_float, so even non-readers need it
-void internalJSONNode::FetchNumber(void) const json_nothrow {
+void internalWGJSONWGNode::FetchNumber(void) const json_nothrow {
     #ifdef JSON_STRICT
 		_value._number = NumberToString::_atof(_string.c_str());
     #else 
@@ -224,7 +224,7 @@ void internalJSONNode::FetchNumber(void) const json_nothrow {
 }
 
 #if !defined(JSON_PREPARSE) && defined(JSON_READ_PRIORITY)
-    void internalJSONNode::Fetch(void) const json_nothrow {
+    void internalWGJSONWGNode::Fetch(void) const json_nothrow {
 	   if (fetched) return;
 	   switch (type()){
 		  case JSON_STRING:
@@ -249,7 +249,7 @@ void internalJSONNode::FetchNumber(void) const json_nothrow {
     }
 #endif
 
-void internalJSONNode::Set(const json_string & val) json_nothrow {
+void internalWGJSONWGNode::Set(const json_string & val) json_nothrow {
     makeNotContainer();
     _type = JSON_STRING;
     _string = val;
@@ -259,7 +259,7 @@ void internalJSONNode::Set(const json_string & val) json_nothrow {
 }
 
 #ifdef JSON_LIBRARY
-    void internalJSONNode::Set(json_int_t val) json_nothrow {
+    void internalWGJSONWGNode::Set(json_int_t val) json_nothrow {
 	   makeNotContainer();
 	   _type = JSON_NUMBER;
 	   _value._number = (json_number)val;
@@ -271,7 +271,7 @@ void internalJSONNode::Set(const json_string & val) json_nothrow {
 	   SetFetched(true);
     }
 
-    void internalJSONNode::Set(json_number val) json_nothrow {
+    void internalWGJSONWGNode::Set(json_number val) json_nothrow {
 	   makeNotContainer();
 	   _type = JSON_NUMBER;
 	   _value._number = val;
@@ -285,7 +285,7 @@ void internalJSONNode::Set(const json_string & val) json_nothrow {
 #else 
     #if(defined(JSON_CASTABLE) || !defined(JSON_LESS_MEMORY) || defined(JSON_WRITE_PRIORITY))
 	   #define SET(converter, type)\
-		  void internalJSONNode::Set(type val) json_nothrow {\
+		  void internalWGJSONWGNode::Set(type val) json_nothrow {\
 			 makeNotContainer();\
 			 _type = JSON_NUMBER;\
 			 _value._number = (json_number)val;\
@@ -293,7 +293,7 @@ void internalJSONNode::Set(const json_string & val) json_nothrow {
 			 SetFetched(true);\
 		  }
 	   #define SET_FLOAT(type) \
-		  void internalJSONNode::Set(type val) json_nothrow {\
+		  void internalWGJSONWGNode::Set(type val) json_nothrow {\
 			 makeNotContainer();\
 			 _type = JSON_NUMBER;\
 			 _value._number = (json_number)val;\
@@ -302,7 +302,7 @@ void internalJSONNode::Set(const json_string & val) json_nothrow {
 		  }
     #else /*<- else */
 	   #define SET(converter, type)\
-		  void internalJSONNode::Set(type val) json_nothrow {\
+		  void internalWGJSONWGNode::Set(type val) json_nothrow {\
 			 makeNotContainer();\
 			 _type = JSON_NUMBER;\
 			 _value._number = (json_number)val;\
@@ -310,7 +310,7 @@ void internalJSONNode::Set(const json_string & val) json_nothrow {
 			 SetFetched(true);\
 		  }
 	   #define SET_FLOAT(type) \
-		  void internalJSONNode::Set(type val) json_nothrow {\
+		  void internalWGJSONWGNode::Set(type val) json_nothrow {\
 			 makeNotContainer();\
 			 _type = JSON_NUMBER;\
 			 _value._number = (json_number)val;\
@@ -333,7 +333,7 @@ void internalJSONNode::Set(const json_string & val) json_nothrow {
     SET_FLOAT(double)
 #endif
 
-void internalJSONNode::Set(bool val) json_nothrow {
+void internalWGJSONWGNode::Set(bool val) json_nothrow {
     makeNotContainer();
     _type = JSON_BOOL;
     _value._bool = val;
@@ -343,7 +343,7 @@ void internalJSONNode::Set(bool val) json_nothrow {
     SetFetched(true);
 }
 
-bool internalJSONNode::IsEqualTo(const internalJSONNode * val) const json_nothrow {
+bool internalWGJSONWGNode::IsEqualTo(const internalWGJSONWGNode * val) const json_nothrow {
     if (this == val) return true;  //same internal object, so they must be equal (not only for ref counting)
     if (type() != val -> type()) return false;	 //aren't even same type
     if (_name != val -> _name) return false;  //names aren't the same
@@ -365,7 +365,7 @@ bool internalJSONNode::IsEqualTo(const internalJSONNode * val) const json_nothro
     if (CHILDREN -> size() != val -> CHILDREN -> size()) return false;  //if they arne't he same size then they certainly aren't equal
 
     //make sure each children is the same
-    JSONNode ** valrunner = val -> CHILDREN -> begin();
+    JSONWGNode ** valrunner = val -> CHILDREN -> begin();
     json_foreach(CHILDREN, myrunner){
         JSON_ASSERT(*myrunner != NULL, json_global(ERROR_NULL_IN_CHILDREN));
 		JSON_ASSERT(*valrunner != NULL, json_global(ERROR_NULL_IN_CHILDREN));
@@ -376,7 +376,7 @@ bool internalJSONNode::IsEqualTo(const internalJSONNode * val) const json_nothro
     return true;
 }
 
-void internalJSONNode::Nullify(void) const json_nothrow {
+void internalWGJSONWGNode::Nullify(void) const json_nothrow {
     _type = JSON_NULL;
     #if(defined(JSON_CASTABLE) || !defined(JSON_LESS_MEMORY) || defined(JSON_WRITE_PRIORITY)) /*-> JSON_CASTABLE || !JSON_LESS_MEMORY || JSON_WRITE_PRIORITY */
 	   _string = json_global(CONST_NULL);
@@ -393,9 +393,9 @@ void internalJSONNode::Nullify(void) const json_nothrow {
 #endif /*<- */
 
 #ifdef JSON_LIBRARY /*-> JSON_LIBRARY */
-void internalJSONNode::push_back(JSONNode * node) json_nothrow {
+void internalWGJSONWGNode::push_back(JSONWGNode * node) json_nothrow {
 #else /*<- else */
-void internalJSONNode::push_back(const JSONNode & node) json_nothrow {
+void internalWGJSONWGNode::push_back(const JSONWGNode & node) json_nothrow {
 #endif /*<- */
     JSON_ASSERT_SAFE(isContainer(), json_global(ERROR_NON_CONTAINER) + JSON_TEXT("push_back"), return;);
     #ifdef JSON_LIBRARY /*-> JSON_LIBRARY */
@@ -404,27 +404,27 @@ void internalJSONNode::push_back(const JSONNode & node) json_nothrow {
 	   #endif /*<- */
 	   CHILDREN -> push_back(node);
     #else /*<- else */
-	   CHILDREN -> push_back(JSONNode::newJSONNode(node   JSON_MUTEX_COPY));
+	   CHILDREN -> push_back(JSONWGNode::newJSONWGNode(node   JSON_MUTEX_COPY));
     #endif /*<- */
 }
 
-void internalJSONNode::push_front(const JSONNode & node) json_nothrow {
+void internalWGJSONWGNode::push_front(const JSONWGNode & node) json_nothrow {
     JSON_ASSERT_SAFE(isContainer(), json_global(ERROR_NON_CONTAINER) + JSON_TEXT("push_front"), return;);
-    CHILDREN -> push_front(JSONNode::newJSONNode(node   JSON_MUTEX_COPY));
+    CHILDREN -> push_front(JSONWGNode::newJSONWGNode(node   JSON_MUTEX_COPY));
 }
 
-JSONNode * internalJSONNode::pop_back(json_index_t pos) json_nothrow {
+JSONWGNode * internalWGJSONWGNode::pop_back(json_index_t pos) json_nothrow {
     JSON_ASSERT_SAFE(isContainer(), json_global(ERROR_NON_CONTAINER) + JSON_TEXT("pop_back"), return 0;);
-    JSONNode * result = (*CHILDREN)[pos];
-    JSONNode ** temp = CHILDREN -> begin() + pos;
+    JSONWGNode * result = (*CHILDREN)[pos];
+    JSONWGNode ** temp = CHILDREN -> begin() + pos;
     CHILDREN -> erase(temp);
     return result;
 }
 
-JSONNode * internalJSONNode::pop_back(const json_string & name_t) json_nothrow {
+JSONWGNode * internalWGJSONWGNode::pop_back(const json_string & name_t) json_nothrow {
     JSON_ASSERT_SAFE(isContainer(), json_global(ERROR_NON_CONTAINER) + JSON_TEXT("pop_back(str)"), return 0;);
-    if (JSONNode ** res = at(name_t)){
-	   JSONNode * result = *res;
+    if (JSONWGNode ** res = at(name_t)){
+	   JSONWGNode * result = *res;
 	   CHILDREN -> erase(res);
 	   return result;
     }
@@ -432,10 +432,10 @@ JSONNode * internalJSONNode::pop_back(const json_string & name_t) json_nothrow {
 }
 
 #ifdef JSON_CASE_INSENSITIVE_FUNCTIONS /*-> JSON_CASE_INSENSITIVE_FUNCTIONS */
-    JSONNode * internalJSONNode::pop_back_nocase(const json_string & name_t) json_nothrow {
+    JSONWGNode * internalWGJSONWGNode::pop_back_nocase(const json_string & name_t) json_nothrow {
 	   JSON_ASSERT_SAFE(isContainer(), json_global(ERROR_NON_CONTAINER) + JSON_TEXT("pop_back_nocase"), return 0;);
-	   if (JSONNode ** res = at_nocase(name_t)){
-		  JSONNode * result = *res;
+	   if (JSONWGNode ** res = at_nocase(name_t)){
+		  JSONWGNode * result = *res;
 		  CHILDREN -> erase(res);
 		  return result;
 	   }
@@ -443,7 +443,7 @@ JSONNode * internalJSONNode::pop_back(const json_string & name_t) json_nothrow {
     }
 #endif /*<- */
 
-JSONNode ** internalJSONNode::at(const json_string & name_t) json_nothrow {
+JSONWGNode ** internalWGJSONWGNode::at(const json_string & name_t) json_nothrow {
     JSON_ASSERT_SAFE(isContainer(), json_global(ERROR_NON_CONTAINER) + JSON_TEXT("at"), return 0;);
     Fetch();
     json_foreach(CHILDREN, myrunner){
@@ -454,7 +454,7 @@ JSONNode ** internalJSONNode::at(const json_string & name_t) json_nothrow {
 }
 
 #ifdef JSON_CASE_INSENSITIVE_FUNCTIONS /*-> JSON_CASE_INSENSITIVE_FUNCTIONS */
-    bool internalJSONNode::AreEqualNoCase(const json_char * ch_one, const json_char * ch_two) json_nothrow {
+    bool internalWGJSONWGNode::AreEqualNoCase(const json_char * ch_one, const json_char * ch_two) json_nothrow {
 	   while (*ch_one){  //only need to check one, if the other one terminates early, the check will cause it to fail
 		  const json_char c_one = *ch_one;
 		  const json_char c_two = *ch_two;
@@ -474,7 +474,7 @@ JSONNode ** internalJSONNode::at(const json_string & name_t) json_nothrow {
 	   return *ch_two == '\0';  //this one has to be null terminated too, or else json_string two is longer, hence, not equal
     }
 
-    JSONNode ** internalJSONNode::at_nocase(const json_string & name_t) json_nothrow {
+    JSONWGNode ** internalWGJSONWGNode::at_nocase(const json_string & name_t) json_nothrow {
 	   JSON_ASSERT_SAFE(isContainer(), json_global(ERROR_NON_CONTAINER) + JSON_TEXT("at_nocase"), return 0;);
 	   Fetch();
 	   json_foreach(CHILDREN, myrunner){
@@ -486,7 +486,7 @@ JSONNode ** internalJSONNode::at(const json_string & name_t) json_nothrow {
 #endif /*<- */
 
 #if !defined(JSON_PREPARSE) && defined(JSON_READ_PRIORITY) /*-> JSON_PREPARSE && JSON_READ_PRIORITY */
-    void internalJSONNode::preparse(void) json_nothrow {
+    void internalWGJSONWGNode::preparse(void) json_nothrow {
 	   Fetch();
 	   if (isContainer()){
 		  json_foreach(CHILDREN, myrunner){
@@ -496,7 +496,7 @@ JSONNode ** internalJSONNode::at(const json_string & name_t) json_nothrow {
     }
 #endif /*<- */
 
-internalJSONNode::operator bool() const json_nothrow {
+internalWGJSONWGNode::operator bool() const json_nothrow {
     Fetch();
     #ifdef JSON_CASTABLE /*-> JSON_CASTABLE */
 	   switch(type()){
@@ -511,7 +511,7 @@ internalJSONNode::operator bool() const json_nothrow {
 }
 
 #ifdef JSON_LIBRARY /*-> JSON_LIBRARY */
-    internalJSONNode::operator json_number() const json_nothrow {
+    internalWGJSONWGNode::operator json_number() const json_nothrow {
 	   Fetch();
 	   #ifdef JSON_CASTABLE /*-> JSON_CASTABLE */
 		  switch(type()){
@@ -527,7 +527,7 @@ internalJSONNode::operator bool() const json_nothrow {
 	   return (json_number)_value._number;
     }
 
-    internalJSONNode::operator json_int_t() const json_nothrow {
+    internalWGJSONWGNode::operator json_int_t() const json_nothrow {
 	   Fetch();
 	   #ifdef JSON_CASTABLE /*-> JSON_CASTABLE */
 		  switch(type()){
@@ -545,7 +545,7 @@ internalJSONNode::operator bool() const json_nothrow {
     }
 #else /*<- else */
     #ifndef JSON_ISO_STRICT /*-> !JSON_ISO_STRICT */
-	   internalJSONNode::operator long double() const json_nothrow {
+	   internalWGJSONWGNode::operator long double() const json_nothrow {
 		  Fetch();
 		  #ifdef JSON_CASTABLE /*-> JSON_CASTABLE */
 			 switch(type()){
@@ -561,7 +561,7 @@ internalJSONNode::operator bool() const json_nothrow {
 		  return (long double)_value._number;
 	   }
     #else /*<- else */
-	   internalJSONNode::operator double() const json_nothrow {
+	   internalWGJSONWGNode::operator double() const json_nothrow {
 		  Fetch();
 		  #ifdef JSON_CASTABLE /*-> JSON_CASTABLE */
 			 switch(type()){
@@ -580,9 +580,9 @@ internalJSONNode::operator bool() const json_nothrow {
 
     //do whichever one is longer, because it's easy to cast down
     #ifdef JSON_ISO_STRICT /*-> JSON_ISO_STRICT */
-	   internalJSONNode::operator long() const json_nothrow
+	   internalWGJSONWGNode::operator long() const json_nothrow
     #else /*<- else */
-	   internalJSONNode::operator long long() const json_nothrow
+	   internalWGJSONWGNode::operator long long() const json_nothrow
     #endif /*<- */
     {
 	   Fetch();
@@ -621,9 +621,9 @@ internalJSONNode::operator bool() const json_nothrow {
     }
 
     #ifdef JSON_ISO_STRICT /*-> JSON_ISO_STRICT */
-	   internalJSONNode::operator unsigned long() const json_nothrow
+	   internalWGJSONWGNode::operator unsigned long() const json_nothrow
     #else /*<- else */
-	   internalJSONNode::operator unsigned long long() const json_nothrow
+	   internalWGJSONWGNode::operator unsigned long long() const json_nothrow
     #endif /*<- */
     {
 	   Fetch();
@@ -666,86 +666,86 @@ internalJSONNode::operator bool() const json_nothrow {
 	static memory_pool<INTERNALNODEPOOL> json_internal_mempool;
 #endif /*<- */
 	
-void internalJSONNode::deleteInternal(internalJSONNode * ptr) json_nothrow {
+void internalWGJSONWGNode::deleteInternal(internalWGJSONWGNode * ptr) json_nothrow {
 	#ifdef JSON_MEMORY_POOL /*-> JSON_MEMORY_POOL */
-		ptr -> ~internalJSONNode();
+		ptr -> ~internalWGJSONWGNode();
 		json_internal_mempool.deallocate((void*)ptr);
 	#elif defined(JSON_MEMORY_CALLBACKS) /*<- else JSON_MEMORY_CALLBACKS */
-		ptr -> ~internalJSONNode();
-		libjson_free<internalJSONNode>(ptr);
+		ptr -> ~internalWGJSONWGNode();
+		libjson_free<internalWGJSONWGNode>(ptr);
 	#else /*<- else */
 		delete ptr;
 	#endif /*<- */
 }
 	
-internalJSONNode * internalJSONNode::newInternal(char mytype) {
+internalWGJSONWGNode * internalWGJSONWGNode::newInternal(char mytype) {
 	#ifdef JSON_MEMORY_POOL /*-> JSON_MEMORY_POOL */
-		return new((internalJSONNode*)json_internal_mempool.allocate()) internalJSONNode(mytype);
+		return new((internalWGJSONWGNode*)json_internal_mempool.allocate()) internalWGJSONWGNode(mytype);
 	#elif defined(JSON_MEMORY_CALLBACKS) /*<- else JSON_MEMORY_CALLBACKS */
-		return new(json_malloc<internalJSONNode>(1)) internalJSONNode(mytype);
+		return new(json_malloc<internalWGJSONWGNode>(1)) internalWGJSONWGNode(mytype);
 	#else /*<- else */
-		return new internalJSONNode(mytype);
+		return new internalWGJSONWGNode(mytype);
 	#endif /*<- */
 }
 	
 #ifdef JSON_READ_PRIORITY /*-> JSON_READ_PRIORITY */
-internalJSONNode * internalJSONNode::newInternal(const json_string & unparsed) {
+internalWGJSONWGNode * internalWGJSONWGNode::newInternal(const json_string & unparsed) {
 	#ifdef JSON_MEMORY_POOL /*-> JSON_MEMORY_POOL */
-		return new((internalJSONNode*)json_internal_mempool.allocate()) internalJSONNode(unparsed);
+		return new((internalWGJSONWGNode*)json_internal_mempool.allocate()) internalWGJSONWGNode(unparsed);
 	#elif defined(JSON_MEMORY_CALLBACKS) /*<- else JSON_MEMORY_CALLBACKS */
-		return new(json_malloc<internalJSONNode>(1)) internalJSONNode(unparsed);
+		return new(json_malloc<internalWGJSONWGNode>(1)) internalWGJSONWGNode(unparsed);
 	#else /*<- else */
-		return new internalJSONNode(unparsed);
+		return new internalWGJSONWGNode(unparsed);
 	#endif /*<- */
 }
 	
-internalJSONNode * internalJSONNode::newInternal(const json_string & name_t, const json_string & value_t) {
+internalWGJSONWGNode * internalWGJSONWGNode::newInternal(const json_string & name_t, const json_string & value_t) {
 	#ifdef JSON_MEMORY_POOL /*-> JSON_MEMORY_POOL */
-		return new((internalJSONNode*)json_internal_mempool.allocate()) internalJSONNode(name_t, value_t);
+		return new((internalWGJSONWGNode*)json_internal_mempool.allocate()) internalWGJSONWGNode(name_t, value_t);
 	#elif defined(JSON_MEMORY_CALLBACKS) /*<- else JSON_MEMORY_CALLBACKS */
-		return new(json_malloc<internalJSONNode>(1)) internalJSONNode(name_t, value_t);
+		return new(json_malloc<internalWGJSONWGNode>(1)) internalWGJSONWGNode(name_t, value_t);
 	#else /*<- else */
-		return new internalJSONNode(name_t, value_t);
+		return new internalWGJSONWGNode(name_t, value_t);
 	#endif /*<- */
 }
 	
 #endif /*<- */
 	
-internalJSONNode * internalJSONNode::newInternal(const internalJSONNode & orig) {
+internalWGJSONWGNode * internalWGJSONWGNode::newInternal(const internalWGJSONWGNode & orig) {
 	#ifdef JSON_MEMORY_POOL /*-> JSON_MEMORY_POOL */
-		return new((internalJSONNode*)json_internal_mempool.allocate()) internalJSONNode(orig);
+		return new((internalWGJSONWGNode*)json_internal_mempool.allocate()) internalWGJSONWGNode(orig);
 	#elif defined(JSON_MEMORY_CALLBACKS) /*<- else JSON_MEMORY_CALLBACKS */
-		return new(json_malloc<internalJSONNode>(1)) internalJSONNode(orig);
+		return new(json_malloc<internalWGJSONWGNode>(1)) internalWGJSONWGNode(orig);
 	#else /*<- else */
-		return new internalJSONNode(orig);
+		return new internalWGJSONWGNode(orig);
 	#endif /*<- */
 }
 
 #ifdef JSON_DEBUG /*-> JSON_MEMORY_POOL */
     #ifndef JSON_LIBRARY /*-> JSON_MEMORY_POOL */
-	   JSONNode internalJSONNode::Dump(size_t & totalbytes) const json_nothrow {
-		  JSONNode dumpage(JSON_NODE);
-		  dumpage.set_name(JSON_TEXT("internalJSONNode"));
-		  dumpage.push_back(JSON_NEW(JSONNode(JSON_TEXT("this"), (long)this)));
+	   JSONWGNode internalWGJSONWGNode::Dump(size_t & totalbytes) const json_nothrow {
+		  JSONWGNode dumpage(JSON_NODE);
+		  dumpage.set_name(JSON_TEXT("internalWGJSONWGNode"));
+		  dumpage.push_back(JSON_NEW(JSONWGNode(JSON_TEXT("this"), (long)this)));
 
 		  START_MEM_SCOPE
-			 size_t memory = sizeof(internalJSONNode);
+			 size_t memory = sizeof(internalWGJSONWGNode);
 			 memory += _name.capacity() * sizeof(json_char);
 			 memory += _string.capacity() * sizeof(json_char);
 			 if (isContainer()){
 				memory += sizeof(jsonChildren);
-				memory += CHILDREN -> capacity() * sizeof(JSONNode*);
+				memory += CHILDREN -> capacity() * sizeof(JSONWGNode*);
 			 }
 			 #ifdef JSON_COMMENTS /*-> JSON_COMMENTS */
 				memory += _comment.capacity() * sizeof(json_char);
 			 #endif /*<- */
 			 totalbytes += memory;
-			 dumpage.push_back(JSON_NEW(JSONNode(JSON_TEXT("bytes used"), memory)));
+			 dumpage.push_back(JSON_NEW(JSONWGNode(JSON_TEXT("bytes used"), memory)));
 		  END_MEM_SCOPE
 
 
 		  #ifdef JSON_REF_COUNT /*-> JSON_REF_COUNT */
-			 dumpage.push_back(JSON_NEW(JSONNode(JSON_TEXT("refcount"), refcount)));
+			 dumpage.push_back(JSON_NEW(JSONWGNode(JSON_TEXT("refcount"), refcount)));
 		  #endif /*<- */
 		  #ifdef JSON_MUTEX_CALLBACKS /*-> JSON_MUTEX_CALLBACKS */
 			 dumpage.push_back(JSON_NEW(DumpMutex()));
@@ -754,7 +754,7 @@ internalJSONNode * internalJSONNode::newInternal(const internalJSONNode & orig) 
 
 		  #define DUMPCASE(ty)\
 			 case ty:\
-				dumpage.push_back(JSON_NEW(JSONNode(JSON_TEXT("_type"), JSON_TEXT(#ty))));\
+				dumpage.push_back(JSON_NEW(JSONWGNode(JSON_TEXT("_type"), JSON_TEXT(#ty))));\
 				break;
 
 		  switch(type()){
@@ -765,55 +765,55 @@ internalJSONNode * internalJSONNode::newInternal(const internalJSONNode & orig) 
 			 DUMPCASE(JSON_ARRAY)
 			 DUMPCASE(JSON_NODE)
 			 default:
-				dumpage.push_back(JSON_NEW(JSONNode(JSON_TEXT("_type"), JSON_TEXT("Unknown"))));
+				dumpage.push_back(JSON_NEW(JSONWGNode(JSON_TEXT("_type"), JSON_TEXT("Unknown"))));
 		  }
 
-		  JSONNode str(JSON_NODE);
+		  JSONWGNode str(JSON_NODE);
 		  str.set_name(JSON_TEXT("_name"));
-		  str.push_back(JSON_NEW(JSONNode(json_string(JSON_TEXT("value")), _name)));
-		  str.push_back(JSON_NEW(JSONNode(JSON_TEXT("length"), _name.length())));
-		  str.push_back(JSON_NEW(JSONNode(JSON_TEXT("capactiy"), _name.capacity())));
+		  str.push_back(JSON_NEW(JSONWGNode(json_string(JSON_TEXT("value")), _name)));
+		  str.push_back(JSON_NEW(JSONWGNode(JSON_TEXT("length"), _name.length())));
+		  str.push_back(JSON_NEW(JSONWGNode(JSON_TEXT("capactiy"), _name.capacity())));
 
-		  dumpage.push_back(JSON_NEW(JSONNode(JSON_TEXT("_name_encoded"), _name_encoded)));
+		  dumpage.push_back(JSON_NEW(JSONWGNode(JSON_TEXT("_name_encoded"), _name_encoded)));
 		  dumpage.push_back(JSON_NEW(str));
-		  dumpage.push_back(JSON_NEW(JSONNode(JSON_TEXT("_string_encoded"), _string_encoded)));
+		  dumpage.push_back(JSON_NEW(JSONWGNode(JSON_TEXT("_string_encoded"), _string_encoded)));
 		  str.clear();
 		  str.set_name(JSON_TEXT("_string"));
-		  str.push_back(JSON_NEW(JSONNode(json_string(JSON_TEXT("value")), _string)));
-		  str.push_back(JSON_NEW(JSONNode(JSON_TEXT("length"), _string.length())));
-		  str.push_back(JSON_NEW(JSONNode(JSON_TEXT("capactiy"), _string.capacity())));
+		  str.push_back(JSON_NEW(JSONWGNode(json_string(JSON_TEXT("value")), _string)));
+		  str.push_back(JSON_NEW(JSONWGNode(JSON_TEXT("length"), _string.length())));
+		  str.push_back(JSON_NEW(JSONWGNode(JSON_TEXT("capactiy"), _string.capacity())));
 		  dumpage.push_back(JSON_NEW(str));
 
 		  if ((type() == JSON_BOOL) || (type() == JSON_NUMBER)){
-			 JSONNode unio(JSON_NODE);
+			 JSONWGNode unio(JSON_NODE);
 			 unio.set_name(JSON_TEXT("_value"));
 			 if (type() == JSON_BOOL){
-				unio.push_back(JSON_NEW(JSONNode(JSON_TEXT("_bool"), _value._bool)));
+				unio.push_back(JSON_NEW(JSONWGNode(JSON_TEXT("_bool"), _value._bool)));
 			 } else if (type() == JSON_NUMBER){
-				unio.push_back(JSON_NEW(JSONNode(JSON_TEXT("_number"), _value._number)));
+				unio.push_back(JSON_NEW(JSONWGNode(JSON_TEXT("_number"), _value._number)));
 			 }
 			 dumpage.push_back(JSON_NEW(unio));
 		  }
 
 		  #if !defined(JSON_PREPARSE) && defined(JSON_READ_PRIORITY) /*-> !JSON_PREPARSE && JSON_READ_PRIORITY */
-			 dumpage.push_back(JSON_NEW(JSONNode(JSON_TEXT("fetched"), fetched)));
+			 dumpage.push_back(JSON_NEW(JSONWGNode(JSON_TEXT("fetched"), fetched)));
 		  #endif /*<- */
 
 		  #ifdef JSON_COMMENTS /*-> JSON_COMMENTS */
 			 str.clear();
 			 str.set_name(JSON_TEXT("_comment"));
-			 str.push_back(JSON_NEW(JSONNode(JSON_TEXT("value"), _comment)));
-			 str.push_back(JSON_NEW(JSONNode(JSON_TEXT("length"), _comment.length())));
-			 str.push_back(JSON_NEW(JSONNode(JSON_TEXT("capactiy"), _comment.capacity())));
+			 str.push_back(JSON_NEW(JSONWGNode(JSON_TEXT("value"), _comment)));
+			 str.push_back(JSON_NEW(JSONWGNode(JSON_TEXT("length"), _comment.length())));
+			 str.push_back(JSON_NEW(JSONWGNode(JSON_TEXT("capactiy"), _comment.capacity())));
 			 dumpage.push_back(JSON_NEW(str));
 		  #endif /*<- */
 
 		  if (isContainer()){
-			 JSONNode arra(JSON_NODE);
+			 JSONWGNode arra(JSON_NODE);
 			 arra.set_name(JSON_TEXT("Children"));
-			 arra.push_back(JSON_NEW(JSONNode(JSON_TEXT("size"), CHILDREN -> size())));
-			 arra.push_back(JSON_NEW(JSONNode(JSON_TEXT("capacity"), CHILDREN -> capacity())));
-			 JSONNode chil(JSON_ARRAY);
+			 arra.push_back(JSON_NEW(JSONWGNode(JSON_TEXT("size"), CHILDREN -> size())));
+			 arra.push_back(JSON_NEW(JSONWGNode(JSON_TEXT("capacity"), CHILDREN -> capacity())));
+			 JSONWGNode chil(JSON_ARRAY);
 			 chil.set_name(JSON_TEXT("array"));
 			 json_foreach(CHILDREN, it){
 				chil.push_back(JSON_NEW((*it) -> dump(totalbytes)));

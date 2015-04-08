@@ -24,10 +24,10 @@ void jsonChildren::inc(void) json_nothrow {
 	   if (json_unlikely(mycapacity == 0)){  //the array hasn't been created yet
 		  JSON_ASSERT(!array, JSON_TEXT("Expanding a 0 capacity array, but not null"));
 		  #ifdef JSON_LESS_MEMORY
-			 array = json_malloc<JSONNode*>(1);
+			 array = json_malloc<JSONWGNode*>(1);
 			 mycapacity = 1;
 		  #else
-			 array = json_malloc<JSONNode*>(8);  //8 seems average for JSON, and it's only 64 bytes
+			 array = json_malloc<JSONWGNode*>(8);  //8 seems average for JSON, and it's only 64 bytes
 			 mycapacity = 8;
 		  #endif
 	   } else {
@@ -36,7 +36,7 @@ void jsonChildren::inc(void) json_nothrow {
 		  #else
 			 mycapacity <<= 1;  //double the size of the array
 		  #endif
-		  array = json_realloc<JSONNode*>(array, mycapacity);
+		  array = json_realloc<JSONWGNode*>(array, mycapacity);
 	   }
     }
 }
@@ -49,10 +49,10 @@ void jsonChildren::inc(json_index_t amount) json_nothrow {
 	   if (json_unlikely(mycapacity == 0)){  //the array hasn't been created yet
 		  JSON_ASSERT(!array, JSON_TEXT("Expanding a 0 capacity array, but not null"));
 		  #ifdef JSON_LESS_MEMORY
-			 array = json_malloc<JSONNode*>(amount);
+			 array = json_malloc<JSONWGNode*>(amount);
 			 mycapacity = amount;
 		  #else
-			 array = json_malloc<JSONNode*>(amount > 8 ? amount : 8);  //8 seems average for JSON, and it's only 64 bytes
+			 array = json_malloc<JSONWGNode*>(amount > 8 ? amount : 8);  //8 seems average for JSON, and it's only 64 bytes
 			 mycapacity = amount > 8 ? amount : 8;
 		  #endif
 	   } else {
@@ -63,7 +63,7 @@ void jsonChildren::inc(json_index_t amount) json_nothrow {
 				mycapacity <<= 1;  //double the size of the array
 			 }
 		  #endif
-		  array = json_realloc<JSONNode*>(array, mycapacity);
+		  array = json_realloc<JSONWGNode*>(array, mycapacity);
 	   }
     }
 }
@@ -73,11 +73,11 @@ void jsonChildren::deleteAll(void) json_nothrow {
     JSON_ASSERT(this != 0, JSON_TEXT("Children is null deleteAll"));
     json_foreach(this, runner){
         JSON_ASSERT(*runner != JSON_TEXT('\0'), JSON_TEXT("a null pointer within the children"));
-	   JSONNode::deleteJSONNode(*runner);  //this is why I can't do forward declaration
+	   JSONWGNode::deleteJSONWGNode(*runner);  //this is why I can't do forward declaration
     }
 }
 
-void jsonChildren::doerase(JSONNode ** position, json_index_t number) json_nothrow {
+void jsonChildren::doerase(JSONWGNode ** position, json_index_t number) json_nothrow {
     JSON_ASSERT(this != 0, JSON_TEXT("Children is null doerase"));
     JSON_ASSERT(array != 0, JSON_TEXT("erasing something from a null array 2"));
     JSON_ASSERT(position >= array, JSON_TEXT("position is beneath the start of the array 2"));
@@ -88,7 +88,7 @@ void jsonChildren::doerase(JSONNode ** position, json_index_t number) json_nothr
 		  JSON_ASSERT((long long)position - (long long)array >= 0, JSON_TEXT("doing negative allocation"));
 	   #endif
     } else {
-	   std::memmove(position, position + number, (mysize - (position - array) - number) * sizeof(JSONNode *));
+	   std::memmove(position, position + number, (mysize - (position - array) - number) * sizeof(JSONWGNode *));
 	   mysize -= number;
     }
 }

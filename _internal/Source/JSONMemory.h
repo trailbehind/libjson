@@ -75,7 +75,7 @@
 
 #ifdef JSON_MEMORY_MANAGE
     #include <map>
-    class JSONNode;
+    class JSONWGNode;
     struct auto_expand {
     public:
 		LIBJSON_OBJECT(auto_expand);
@@ -102,12 +102,12 @@
 	   ~auto_expand_node(void) json_nothrow { purge(); LIBJSON_DTOR; }
 	   void purge(void) json_nothrow ;
 	   inline void clear(void) json_nothrow { purge(); mymap.clear(); }
-	   inline JSONNode * insert(JSONNode * ptr) json_nothrow { mymap[ptr] = ptr; return ptr; }
+	   inline JSONWGNode * insert(JSONWGNode * ptr) json_nothrow { mymap[ptr] = ptr; return ptr; }
 	   inline void remove(void * ptr) json_nothrow {
-		  JSON_MAP(void *, JSONNode *)::iterator i = mymap.find(ptr);
+		  JSON_MAP(void *, JSONWGNode *)::iterator i = mymap.find(ptr);
 		  if(json_likely(i != mymap.end())) mymap.erase(i);
 	   }
-	   JSON_MAP(void *, JSONNode *) mymap;
+	   JSON_MAP(void *, JSONWGNode *) mymap;
     private:
         auto_expand_node(const auto_expand_node &);
         auto_expand_node & operator = (const auto_expand_node &);

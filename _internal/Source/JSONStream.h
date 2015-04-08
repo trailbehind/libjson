@@ -18,8 +18,8 @@
 #endif
 
 #ifndef JSON_LIBRARY
-class JSONNode; //foreward declaration
-typedef void (*json_stream_callback_t)(JSONNode &, void *);
+class JSONWGNode; //foreward declaration
+typedef void (*json_stream_callback_t)(JSONWGNode &, void *);
 #endif
 
 class JSONStream {
